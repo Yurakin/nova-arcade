@@ -1,0 +1,4268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Arcade</title>
+  <style>
+    /* ==========================================================================
+       1. BASE RESET & FRUTIGER AERO DESIGN TOKENS
+       ========================================================================== */
+    :root {
+      --sky-top: #0066cc;
+      --sky-mid: #1ca3ec;
+      --sky-low: #7ce0ff;
+      --sky-horizon: #e0f7ff;
+
+      --aero-panel: rgba(255, 255, 255, 0.85);
+      --aero-panel-strong: rgba(255, 255, 255, 0.93);
+      --aero-border: rgba(255, 255, 255, 0.96);
+      --aero-shadow: 0 10px 28px rgba(0, 78, 146, 0.16);
+
+      --text-primary: #082f49;
+      --text-secondary: #0c4a6e;
+      --text-muted: #3b6e8c;
+
+      --gel-sheen: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.92) 0%,
+        rgba(255, 255, 255, 0.44) 48%,
+        rgba(255, 255, 255, 0.06) 51%,
+        rgba(255, 255, 255, 0.24) 100%
+      );
+
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #0066cc 0%, #1ca3ec 34%, #7ce0ff 68%, #e0f7ff 100%);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      font-family: "Segoe UI", "Frutiger", "Inter", system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    button, input, select {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    ::-webkit-scrollbar {
+      width: 9px;
+      height: 9px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(224, 247, 255, 0.8);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #38bdf8, #0284c7);
+      border-radius: 9999px;
+      border: 2px solid rgba(255, 255, 255, 0.85);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #0ea5e9, #0369a1);
+    }
+
+    /* ==========================================================================
+       2. NON-INTERACTIVE FRUTIGER AERO SKY, SUN FLARE, BOKEH & ECO-WAVE BACKDROP
+       ========================================================================== */
+    .aero-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .aero-sunflare {
+      position: absolute;
+      top: -150px;
+      right: -120px;
+      width: 580px;
+      height: 580px;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        rgba(255, 255, 255, 0.94) 0%,
+        rgba(255, 255, 255, 0.48) 22%,
+        rgba(186, 230, 253, 0.22) 52%,
+        transparent 72%
+      );
+      filter: blur(3px);
+    }
+
+    .aero-sunbeam {
+      position: absolute;
+      top: -90px;
+      right: 30px;
+      width: 820px;
+      height: 460px;
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.34) 0%,
+        rgba(255, 255, 255, 0.08) 45%,
+        transparent 75%
+      );
+      transform: rotate(-18deg);
+      border-radius: 50%;
+    }
+
+    .aero-bokeh {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle at 32% 30%,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(255, 255, 255, 0.36) 45%,
+        rgba(125, 211, 252, 0.16) 76%,
+        rgba(255, 255, 255, 0.56) 100%
+      );
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.92), 0 6px 20px rgba(0, 102, 204, 0.1);
+      animation: aeroFloat 14s ease-in-out infinite alternate;
+    }
+
+    .aero-bokeh.b1 { width: 155px; height: 155px; top: 13%; left: 5%; animation-duration: 16s; }
+    .aero-bokeh.b2 { width: 92px; height: 92px; top: 27%; left: 20%; animation-duration: 12s; animation-delay: -3s; }
+    .aero-bokeh.b3 { width: 195px; height: 195px; top: 42%; right: 7%; animation-duration: 18s; animation-delay: -5s; }
+    .aero-bokeh.b4 { width: 76px; height: 76px; top: 18%; right: 25%; animation-duration: 11s; animation-delay: -2s; }
+    .aero-bokeh.b5 {
+      width: 130px;
+      height: 130px;
+      bottom: 17%;
+      left: 13%;
+      background: radial-gradient(
+        circle at 32% 30%,
+        rgba(255, 255, 255, 0.92) 0%,
+        rgba(134, 239, 172, 0.38) 55%,
+        rgba(255, 255, 255, 0.58) 100%
+      );
+      animation-duration: 15s;
+    }
+    .aero-bokeh.b6 { width: 68px; height: 68px; bottom: 25%; right: 22%; animation-duration: 13s; animation-delay: -4s; }
+
+    @keyframes aeroFloat {
+      0% { transform: translate3d(0, 0, 0) scale(1); }
+      100% { transform: translate3d(14px, -18px, 0) scale(1.04); }
+    }
+
+    .aero-waves {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 240px;
+      opacity: 0.9;
+    }
+
+    /* ==========================================================================
+       3. UNIFIED STICKY TWO-TIER TOP HEADER & CATEGORY BAR (z-index: 50)
+       ========================================================================== */
+    .sticky-shell {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.93) 0%, rgba(235, 248, 255, 0.85) 100%);
+      backdrop-filter: blur(16px) saturate(165%);
+      -webkit-backdrop-filter: blur(16px) saturate(165%);
+      border-bottom: 1px solid var(--aero-border);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 8px 26px rgba(0, 78, 146, 0.16);
+    }
+
+    .top-bar {
+      max-width: 1560px;
+      margin: 0 auto;
+      min-height: 64px;
+      padding: 8px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      font-size: 1.22rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background:
+        var(--gel-sheen),
+        radial-gradient(circle at 30% 28%, #7ce0ff 0%, #0284c7 58%, #16a34a 100%);
+      border: 1.5px solid #ffffff;
+      display: grid;
+      place-items: center;
+      font-size: 1.05rem;
+      color: #ffffff;
+      text-shadow: 0 1px 3px rgba(0, 48, 96, 0.55);
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.38), inset 0 1px 2px #ffffff;
+    }
+
+    .brand-text {
+      background: linear-gradient(180deg, #005bb5 0%, #0284c7 55%, #0d9488 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
+    }
+
+    .count-badge {
+      padding: 5px 12px;
+      border-radius: 9999px;
+      background: var(--gel-sheen), linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%);
+      border: 1px solid rgba(2, 132, 199, 0.42);
+      color: #0369a1;
+      font-size: 0.75rem;
+      font-weight: 800;
+      white-space: nowrap;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 2px 8px rgba(2, 132, 199, 0.14);
+    }
+
+    .header-search {
+      position: relative;
+      flex: 1;
+      max-width: 480px;
+      min-width: 180px;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-search input {
+      width: 100%;
+      height: 39px;
+      padding: 0 58px 0 38px;
+      border-radius: 9999px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(240, 249, 255, 0.92) 100%);
+      border: 1px solid rgba(14, 165, 233, 0.42);
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      outline: none;
+      box-shadow: inset 0 2px 5px rgba(0, 78, 146, 0.08), 0 1px 0 #ffffff;
+      transition: border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+    }
+
+    .header-search input::placeholder {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .header-search input:focus {
+      border-color: #0284c7;
+      box-shadow: inset 0 2px 5px rgba(0, 78, 146, 0.08), 0 0 0 3px rgba(56, 189, 248, 0.34);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 13px;
+      font-size: 0.85rem;
+      color: #0284c7;
+      pointer-events: none;
+    }
+
+    .search-kbd {
+      position: absolute;
+      right: 11px;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      background: linear-gradient(180deg, #ffffff, #e0f2fe);
+      border: 1px solid rgba(14, 165, 233, 0.38);
+      color: #0369a1;
+      font-size: 0.68rem;
+      font-weight: 800;
+      pointer-events: none;
+    }
+
+    .header-search.has-query .search-kbd {
+      display: none;
+    }
+
+    .search-clear-btn {
+      position: absolute;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid rgba(14, 165, 233, 0.35);
+      background: linear-gradient(180deg, #ffffff, #e0f2fe);
+      color: #0369a1;
+      font-size: 0.95rem;
+      display: none;
+      place-items: center;
+    }
+
+    .header-search.has-query .search-clear-btn {
+      display: grid;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-shrink: 0;
+    }
+
+    .mode-switch {
+      display: inline-flex;
+      padding: 3px;
+      border-radius: 9999px;
+      background: linear-gradient(180deg, rgba(224, 242, 254, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
+      border: 1px solid rgba(14, 165, 233, 0.38);
+      box-shadow: inset 0 1px 3px rgba(0, 78, 146, 0.1), 0 1px 0 #ffffff;
+    }
+
+    .mode-btn {
+      padding: 5px 12px;
+      border-radius: 9999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.74rem;
+      font-weight: 700;
+      white-space: nowrap;
+      transition: all 0.16s var(--ease);
+    }
+
+    .mode-btn.active {
+      background: var(--gel-sheen), linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+      border-color: #0369a1;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 48, 96, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 2px 8px rgba(2, 132, 199, 0.28);
+    }
+
+    .header-credits-btn {
+      height: 38px;
+      padding: 0 14px;
+      border-radius: 9999px;
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #dff3ff 100%);
+      border: 1px solid rgba(14, 165, 233, 0.45);
+      color: var(--text-primary);
+      font-size: 0.77rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 3px 10px rgba(0, 78, 146, 0.12);
+      transition: all 0.16s var(--ease);
+    }
+
+    .header-credits-btn:hover {
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #bae6fd 100%);
+      border-color: #0284c7;
+      transform: translateY(-1px);
+    }
+
+    .primary-add-btn {
+      height: 38px;
+      padding: 0 16px;
+      border-radius: 9999px;
+      border: 1px solid #15803d;
+      background: var(--gel-sheen), linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
+      color: #ffffff;
+      font-size: 0.79rem;
+      font-weight: 800;
+      text-shadow: 0 1px 2px rgba(5, 46, 22, 0.45);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 14px rgba(22, 163, 74, 0.34);
+      transition: all 0.16s var(--ease);
+    }
+
+    .primary-add-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+      box-shadow: inset 0 1px 0 #ffffff, 0 6px 18px rgba(22, 163, 74, 0.42);
+    }
+
+    /* Tier 2: Sticky Top Category Bar */
+    .top-category-bar {
+      border-top: 1px solid rgba(255, 255, 255, 0.95);
+      background: linear-gradient(180deg, rgba(224, 245, 255, 0.85) 0%, rgba(202, 236, 255, 0.76) 100%);
+    }
+
+    .top-category-inner {
+      max-width: 1560px;
+      margin: 0 auto;
+      padding: 8px 22px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .cat-pill {
+      padding: 6px 13px;
+      border-radius: 9999px;
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #e4f4ff 100%);
+      border: 1px solid rgba(14, 165, 233, 0.38);
+      color: var(--text-primary);
+      font-size: 0.76rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 2px 6px rgba(0, 78, 146, 0.1);
+      transition: all 0.16s var(--ease);
+    }
+
+    .cat-pill:hover {
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #bae6fd 100%);
+      border-color: #0284c7;
+      transform: translateY(-1px);
+    }
+
+    .cat-pill.active {
+      background: var(--gel-sheen), linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+      border-color: #0369a1;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 48, 96, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 12px rgba(2, 132, 199, 0.34);
+    }
+
+    .cat-pill-count {
+      padding: 1px 7px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(2, 132, 199, 0.25);
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: #0369a1;
+      text-shadow: none;
+    }
+
+    /* ==========================================================================
+       4. MAIN WORKSPACE, HERO QUICK-LAUNCH BAR & LOG DRAWER (z-index: 2)
+       ========================================================================== */
+    .main-wrap {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 1560px;
+      margin: 0 auto;
+      padding: 20px 22px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .hero-bar {
+      padding: 18px 22px;
+      border-radius: 20px;
+      background: var(--aero-panel);
+      backdrop-filter: blur(16px) saturate(165%);
+      -webkit-backdrop-filter: blur(16px) saturate(165%);
+      border: 1px solid var(--aero-border);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), var(--aero-shadow);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .hero-info h1 {
+      margin: 0 0 4px;
+      font-size: 1.24rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .hero-info p {
+      margin: 0;
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-action {
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 9999px;
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%);
+      border: 1px solid rgba(14, 165, 233, 0.42);
+      color: var(--text-primary);
+      font-size: 0.77rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 3px 9px rgba(0, 78, 146, 0.12);
+      transition: all 0.16s var(--ease);
+    }
+
+    .btn-action:hover:not(:disabled) {
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #bae6fd 100%);
+      border-color: #0284c7;
+      transform: translateY(-1px);
+      box-shadow: inset 0 1px 0 #ffffff, 0 5px 14px rgba(2, 132, 199, 0.22);
+    }
+
+    .btn-action.featured {
+      background: var(--gel-sheen), linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+      border-color: #0369a1;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 48, 96, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 14px rgba(2, 132, 199, 0.34);
+    }
+
+    .btn-action.flash {
+      background: var(--gel-sheen), linear-gradient(180deg, #fbbf24 0%, #ea580c 100%);
+      border-color: #c2410c;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(124, 45, 18, 0.45);
+    }
+
+    .btn-action.emu {
+      background: var(--gel-sheen), linear-gradient(180deg, #c084fc 0%, #7c3aed 100%);
+      border-color: #6d28d9;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(76, 29, 149, 0.45);
+    }
+
+    .btn-action.restore {
+      background: var(--gel-sheen), linear-gradient(180deg, #fb7185 0%, #e11d48 100%);
+      border-color: #be123c;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(136, 19, 55, 0.45);
+    }
+
+    .sync-status-badge {
+      padding: 6px 12px;
+      border-radius: 9999px;
+      background: var(--gel-sheen), linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
+      border: 1px solid #15803d;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(5, 46, 22, 0.45);
+      font-size: 0.72rem;
+      font-weight: 800;
+      white-space: nowrap;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 3px 10px rgba(22, 163, 74, 0.28);
+    }
+
+    /* Collapsible Log Drawer */
+    .log-drawer {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: var(--aero-panel);
+      backdrop-filter: blur(16px) saturate(165%);
+      -webkit-backdrop-filter: blur(16px) saturate(165%);
+      border: 1px solid var(--aero-border);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), var(--aero-shadow);
+    }
+
+    .log-drawer.open {
+      display: flex;
+    }
+
+    .log-drawer-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .log-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .log-stat-pill {
+      padding: 4px 11px;
+      border-radius: 9999px;
+      background: linear-gradient(180deg, #ffffff, #e0f2fe);
+      border: 1px solid rgba(14, 165, 233, 0.35);
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .log-progress-track {
+      width: 100%;
+      height: 8px;
+      border-radius: 9999px;
+      background: rgba(2, 132, 199, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.92);
+      overflow: hidden;
+    }
+
+    .log-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--gel-sheen), linear-gradient(90deg, #0284c7, #38bdf8, #22c55e);
+      transition: width 0.2s ease;
+    }
+
+    .log-entries {
+      max-height: 165px;
+      overflow-y: auto;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(240, 249, 255, 0.92);
+      border: 1px solid rgba(14, 165, 233, 0.35);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.74rem;
+      line-height: 1.55;
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    /* ==========================================================================
+       5. PLATFORM FILTER BAR & EMULATED CONSOLE SUB-FILTER BAR
+       ========================================================================== */
+    .platform-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: var(--aero-panel);
+      backdrop-filter: blur(16px) saturate(165%);
+      -webkit-backdrop-filter: blur(16px) saturate(165%);
+      border: 1px solid var(--aero-border);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), var(--aero-shadow);
+    }
+
+    .platform-pill {
+      padding: 7px 14px;
+      border-radius: 9999px;
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #e4f4ff 100%);
+      border: 1px solid rgba(14, 165, 233, 0.38);
+      color: var(--text-primary);
+      font-size: 0.79rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 2px 7px rgba(0, 78, 146, 0.1);
+      transition: all 0.16s var(--ease);
+    }
+
+    .platform-pill:hover {
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #bae6fd 100%);
+      border-color: #0284c7;
+      transform: translateY(-1px);
+    }
+
+    .platform-pill.active {
+      background: var(--gel-sheen), linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+      border-color: #0369a1;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 48, 96, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+
+    .platform-pill.active-emu {
+      background: var(--gel-sheen), linear-gradient(180deg, #c084fc 0%, #7c3aed 100%);
+      border-color: #6d28d9;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(76, 29, 149, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+
+    .platform-pill.active-flash {
+      background: var(--gel-sheen), linear-gradient(180deg, #fbbf24 0%, #ea580c 100%);
+      border-color: #c2410c;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(124, 45, 18, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 12px rgba(234, 88, 12, 0.3);
+    }
+
+    .platform-pill.active-ext {
+      background: var(--gel-sheen), linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
+      border-color: #15803d;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(5, 46, 22, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 12px rgba(22, 163, 74, 0.3);
+    }
+
+    .platform-pill.warn {
+      border-color: rgba(225, 29, 72, 0.45);
+      color: #be123c;
+    }
+
+    .pill-count {
+      padding: 1px 7px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(2, 132, 199, 0.25);
+      font-size: 0.69rem;
+      font-weight: 800;
+      color: #0369a1;
+      text-shadow: none;
+    }
+
+    .console-subbar {
+      display: none;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      padding: 11px 14px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(250, 245, 255, 0.92) 0%, rgba(237, 233, 254, 0.84) 100%);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--aero-border);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 6px 18px rgba(109, 40, 217, 0.14);
+    }
+
+    .console-subbar.visible {
+      display: flex;
+    }
+
+    .console-label {
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: #6d28d9;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-right: 4px;
+    }
+
+    .console-pill {
+      padding: 5px 12px;
+      border-radius: 9999px;
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #ede9fe 100%);
+      border: 1px solid rgba(139, 92, 246, 0.42);
+      color: #4c1d95;
+      font-size: 0.74rem;
+      font-weight: 700;
+      transition: all 0.15s var(--ease);
+    }
+
+    .console-pill:hover {
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #ddd6fe 100%);
+    }
+
+    .console-pill.active {
+      background: var(--gel-sheen), linear-gradient(180deg, #c084fc 0%, #7c3aed 100%);
+      border-color: #6d28d9;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(76, 29, 149, 0.45);
+    }
+
+    /* ==========================================================================
+       6. LIBRARY TOOLBAR, GLOSSY AERO GAME CARDS & PAGINATION
+       ========================================================================== */
+    .library-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 14px;
+      background: var(--aero-panel);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--aero-border);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 14px rgba(0, 78, 146, 0.1);
+    }
+
+    .library-heading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .library-heading h2 {
+      margin: 0;
+      font-size: 1.06rem;
+      font-weight: 900;
+      color: var(--text-primary);
+    }
+
+    .showing-pill {
+      padding: 3px 10px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(14, 165, 233, 0.35);
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #0369a1;
+    }
+
+    .sort-select {
+      height: 34px;
+      padding: 0 13px;
+      border-radius: 9999px;
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%);
+      border: 1px solid rgba(14, 165, 233, 0.42);
+      color: var(--text-primary);
+      font-size: 0.77rem;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(238px, 1fr));
+      gap: 15px;
+    }
+
+    .game-card {
+      position: relative;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(236, 248, 255, 0.9) 100%);
+      border: 1px solid var(--aero-border);
+      border-radius: 18px;
+      padding: 17px 15px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 0 0 1px rgba(14, 165, 233, 0.24), 0 8px 22px rgba(0, 78, 146, 0.13);
+      transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+    }
+
+    .game-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      z-index: 2;
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+    }
+
+    .game-card.type-flash::before {
+      background: linear-gradient(90deg, #ea580c, #fbbf24);
+    }
+
+    .game-card.type-emulated::before {
+      background: linear-gradient(90deg, #7c3aed, #c084fc);
+    }
+
+    .game-card.type-external::before {
+      background: linear-gradient(90deg, #16a34a, #4ade80);
+    }
+
+    .game-card::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 0;
+      right: 0;
+      height: 44%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(255, 255, 255, 0.12) 100%);
+      border-radius: 0 0 50% 50% / 0 0 16px 16px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .game-card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .game-card:hover {
+      transform: translateY(-4px);
+      box-shadow: inset 0 1px 0 #ffffff, 0 0 0 1.5px rgba(14, 165, 233, 0.6), 0 16px 32px rgba(2, 132, 199, 0.24);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .type-badge {
+      padding: 3px 9px;
+      border-radius: 9999px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      background: var(--gel-sheen), linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+      border: 1px solid #0369a1;
+      color: #ffffff;
+      text-shadow: 0 1px 1px rgba(0, 48, 96, 0.45);
+    }
+
+    .type-badge.flash {
+      background: var(--gel-sheen), linear-gradient(180deg, #fbbf24 0%, #ea580c 100%);
+      border-color: #c2410c;
+      color: #ffffff;
+      text-shadow: 0 1px 1px rgba(124, 45, 18, 0.45);
+    }
+
+    .type-badge.emulated {
+      background: var(--gel-sheen), linear-gradient(180deg, #c084fc 0%, #7c3aed 100%);
+      border-color: #6d28d9;
+      color: #ffffff;
+      text-shadow: 0 1px 1px rgba(76, 29, 149, 0.45);
+    }
+
+    .type-badge.external {
+      background: var(--gel-sheen), linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
+      border-color: #15803d;
+      color: #ffffff;
+      text-shadow: 0 1px 1px rgba(5, 46, 22, 0.45);
+    }
+
+    .console-chip {
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%);
+      border: 1px solid rgba(14, 165, 233, 0.45);
+      color: var(--text-primary);
+      font-size: 0.66rem;
+      font-weight: 800;
+    }
+
+    .fav-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%);
+      border: 1px solid rgba(14, 165, 233, 0.38);
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      transition: all 0.15s var(--ease);
+    }
+
+    .fav-btn:hover, .fav-btn.active {
+      background: var(--gel-sheen), linear-gradient(180deg, #fde047 0%, #f59e0b 100%);
+      border-color: #d97706;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(146, 64, 14, 0.5);
+    }
+
+    .card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 0.96rem;
+      font-weight: 800;
+      line-height: 1.32;
+      color: var(--text-primary);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-meta {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .genre-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: capitalize;
+    }
+
+    .play-btn {
+      padding: 7px 15px;
+      border-radius: 9999px;
+      background: var(--gel-sheen), linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%);
+      border: 1px solid rgba(2, 132, 199, 0.45);
+      color: #0369a1;
+      font-size: 0.76rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 2px 6px rgba(2, 132, 199, 0.14);
+      transition: all 0.15s var(--ease);
+    }
+
+    .game-card:hover .play-btn {
+      background: var(--gel-sheen), linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+      border-color: #0369a1;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 48, 96, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 14px rgba(2, 132, 199, 0.34);
+    }
+
+    .pagination-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 0 4px;
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      padding: 44px 20px;
+      border-radius: 18px;
+      background: var(--aero-panel-strong);
+      border: 1.5px dashed rgba(2, 132, 199, 0.45);
+      text-align: center;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================================================
+       7. COLLAPSIBLE FAILED CHECK SECTION (#failedSection)
+       ========================================================================== */
+    .failed-section {
+      margin-top: 14px;
+      padding: 18px 20px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 241, 242, 0.84) 100%);
+      backdrop-filter: blur(16px) saturate(165%);
+      -webkit-backdrop-filter: blur(16px) saturate(165%);
+      border: 1px solid var(--aero-border);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 0 0 1px rgba(225, 29, 72, 0.25), var(--aero-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .failed-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .failed-header h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 900;
+      color: #be123c;
+    }
+
+    .failed-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .failed-section.collapsed .failed-body {
+      display: none;
+    }
+
+    .failed-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+      gap: 12px;
+    }
+
+    .failed-card {
+      padding: 14px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #fff1f2 100%);
+      border: 1px solid rgba(225, 29, 72, 0.28);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 12px rgba(190, 18, 60, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .failed-card-title {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .failed-reason {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #be123c;
+      background: rgba(254, 205, 211, 0.55);
+      border: 1px solid rgba(225, 29, 72, 0.22);
+      padding: 5px 9px;
+      border-radius: 9px;
+    }
+
+    .failed-card-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .mini-recover-btn {
+      padding: 5px 11px;
+      border-radius: 9999px;
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%);
+      border: 1px solid rgba(14, 165, 233, 0.42);
+      color: var(--text-primary);
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .mini-recover-btn:hover {
+      background: var(--gel-sheen), linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+      border-color: #0369a1;
+      color: #ffffff;
+    }
+
+    /* ==========================================================================
+       8. FULL-VIEWPORT IN-PAGE STAGE & LEFT-SIDE AERO GLASS HUD (z-index: 150)
+       ========================================================================== */
+    .stage-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 150;
+      background: #031324;
+      display: none;
+      flex-direction: column;
+    }
+
+    .stage-overlay.active {
+      display: flex;
+    }
+
+    .stage-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #000000;
+      flex: 1;
+    }
+
+    .stage-loader {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0, 102, 204, 0.95) 0%, rgba(28, 163, 236, 0.95) 100%);
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 160;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .stage-loader.hidden {
+      display: none;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3.5px solid rgba(255, 255, 255, 0.35);
+      border-top-color: #ffffff;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .stage-hud {
+      position: fixed;
+      top: 50%;
+      left: 12px;
+      transform: translateY(-50%);
+      z-index: 170;
+      width: 138px;
+      max-height: calc(100vh - 24px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 7px;
+      padding: 12px 10px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(224, 242, 254, 0.88) 100%);
+      backdrop-filter: blur(16px) saturate(165%);
+      -webkit-backdrop-filter: blur(16px) saturate(165%);
+      border: 1px solid #ffffff;
+      box-shadow: inset 0 1px 0 #ffffff, 0 10px 28px rgba(0, 48, 96, 0.35);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .stage-hud.hud-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-18px, -50%);
+    }
+
+    .hud-title {
+      font-size: 0.77rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      text-align: center;
+      line-height: 1.25;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      padding: 2px 4px 7px;
+      border-bottom: 1px solid rgba(14, 165, 233, 0.28);
+    }
+
+    .hud-btn {
+      width: 100%;
+      padding: 7px 10px;
+      border-radius: 9999px;
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%);
+      border: 1px solid rgba(14, 165, 233, 0.45);
+      color: var(--text-primary);
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .hud-btn:hover {
+      background: var(--gel-sheen), linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+      border-color: #0369a1;
+      color: #ffffff;
+    }
+
+    .hud-restore-pill {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 175;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%);
+      border: 1px solid #ffffff;
+      color: var(--text-primary);
+      font-size: 0.73rem;
+      font-weight: 800;
+      box-shadow: 0 6px 18px rgba(0, 48, 96, 0.28);
+      display: none;
+    }
+
+    .hud-restore-pill.visible {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ==========================================================================
+       9. MODALS (+ ADD GAME / ROM & CREDITS / TRADEMARKS) + TOAST + FOOTER
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 56, 112, 0.45);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 580px;
+      max-height: 88vh;
+      overflow-y: auto;
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(235, 248, 255, 0.92) 100%);
+      border: 1.5px solid #ffffff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 24px 60px rgba(0, 56, 112, 0.34);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .modal-top h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--text-primary);
+    }
+
+    .modal-close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--gel-sheen), linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%);
+      border: 1px solid rgba(14, 165, 233, 0.42);
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      display: grid;
+      place-items: center;
+    }
+
+    .modal-tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 4px;
+      border-radius: 9999px;
+      background: rgba(224, 242, 254, 0.85);
+      border: 1px solid rgba(14, 165, 233, 0.35);
+    }
+
+    .modal-tab-btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 8px 12px;
+      border-radius: 9999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .modal-tab-btn.active {
+      background: var(--gel-sheen), linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+      border-color: #0369a1;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 48, 96, 0.45);
+    }
+
+    .modal-pane {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-pane.active {
+      display: flex;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-group label {
+      font-size: 0.76rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .field-input, .field-select {
+      width: 100%;
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 12px;
+      background: #ffffff;
+      border: 1px solid rgba(14, 165, 233, 0.45);
+      color: var(--text-primary);
+      font-size: 0.84rem;
+      font-weight: 600;
+      outline: none;
+      box-shadow: inset 0 2px 4px rgba(0, 78, 146, 0.06);
+    }
+
+    .field-input:focus, .field-select:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.28);
+    }
+
+    .rom-dropzone {
+      padding: 22px 16px;
+      border-radius: 16px;
+      border: 1.5px dashed rgba(124, 58, 237, 0.55);
+      background: linear-gradient(180deg, rgba(250, 245, 255, 0.95), rgba(237, 233, 254, 0.85));
+      text-align: center;
+      color: #4c1d95;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .credits-box {
+      padding: 15px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(14, 165, 233, 0.35);
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast-banner {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 250;
+      padding: 11px 18px;
+      border-radius: 9999px;
+      background: var(--gel-sheen), linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(224, 242, 254, 0.94) 100%);
+      border: 1px solid #0284c7;
+      color: var(--text-primary);
+      font-size: 0.8rem;
+      font-weight: 800;
+      box-shadow: inset 0 1px 0 #ffffff, 0 12px 28px rgba(0, 78, 146, 0.24);
+      opacity: 0;
+      transform: translateY(14px);
+      pointer-events: none;
+      transition: all 0.2s var(--ease);
+    }
+
+    .toast-banner.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .app-footer {
+      position: relative;
+      z-index: 2;
+      border-top: 1px solid var(--aero-border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(224, 247, 250, 0.82) 100%);
+      backdrop-filter: blur(14px);
+      padding: 16px 22px;
+    }
+
+    .footer-inner {
+      max-width: 1560px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.77rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .footer-link-btn {
+      background: none;
+      border: none;
+      color: #0369a1;
+      font-weight: 800;
+      font-size: 0.77rem;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 780px) {
+      .top-bar {
+        flex-wrap: wrap;
+        padding: 10px 14px;
+      }
+      .header-search {
+        order: 3;
+        max-width: 100%;
+        width: 100%;
+        flex-basis: 100%;
+      }
+      .main-wrap {
+        padding: 14px 14px 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Decorative Non-Interactive Frutiger Aero Sky, Sun Flare, Bokeh & Eco-Wave Backdrop -->
+  <div class="aero-backdrop" aria-hidden="true">
+    <div class="aero-sunflare"></div>
+    <div class="aero-sunbeam"></div>
+    <div class="aero-bokeh b1"></div>
+    <div class="aero-bokeh b2"></div>
+    <div class="aero-bokeh b3"></div>
+    <div class="aero-bokeh b4"></div>
+    <div class="aero-bokeh b5"></div>
+    <div class="aero-bokeh b6"></div>
+    <svg class="aero-waves" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="aeroWaveAqua" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.36"/>
+          <stop offset="50%" stop-color="#22d3ee" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#4ade80" stop-opacity="0.38"/>
+        </linearGradient>
+        <linearGradient id="aeroWaveGreen" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#4ade80" stop-opacity="0.38"/>
+          <stop offset="55%" stop-color="#22c55e" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.32"/>
+        </linearGradient>
+      </defs>
+      <path fill="url(#aeroWaveAqua)" d="M0,170 C360,90 720,260 1080,165 C1260,120 1360,140 1440,155 L1440,320 L0,320 Z"/>
+      <path fill="url(#aeroWaveGreen)" d="M0,220 C320,280 760,130 1160,215 C1310,245 1390,220 1440,205 L1440,320 L0,320 Z"/>
+      <path fill="rgba(255,255,255,0.44)" d="M0,255 C420,210 880,295 1440,235 L1440,320 L0,320 Z"/>
+    </svg>
+  </div>
+
+  <!-- ========================================================================
+       STICKY TWO-TIER TOP HEADER SHELL
+       ======================================================================== -->
+  <header class="sticky-shell" id="stickyShell">
+    <div class="top-bar">
+      <div class="header-left">
+        <a href="#top" class="brand" id="brandHomeBtn">
+          <span class="brand-icon" aria-hidden="true">&#9670;</span>
+          <span class="brand-text">Nova Arcade</span>
+        </a>
+        <span class="count-badge" id="countBadge">0 Playable</span>
+      </div>
+
+      <div class="header-search" id="searchContainer">
+        <span class="search-icon" aria-hidden="true">&#128269;</span>
+        <input type="text" id="searchInput" placeholder="Search 2,700+ games, consoles, or genres..." autocomplete="off">
+        <span class="search-kbd">/</span>
+        <button type="button" class="search-clear-btn" id="searchClearBtn" aria-label="Clear search">&times;</button>
+      </div>
+
+      <div class="header-right">
+        <div class="mode-switch" role="group" aria-label="Launch Mode">
+          <button type="button" class="mode-btn active" id="modeStageBtn" data-mode="stage">In-Page Stage</button>
+          <button type="button" class="mode-btn" id="modeBlankBtn" data-mode="blank">about:blank Tab</button>
+        </div>
+        <button type="button" class="header-credits-btn" id="headerCreditsBtn">&#9878;&#65039; Credits &amp; Trademarks</button>
+        <button type="button" class="primary-add-btn" id="openAddModalBtn">&#43; Add Game / ROM</button>
+      </div>
+    </div>
+
+    <!-- Tier 2: Sticky Top Category Bar (#topCategoryBar) -->
+    <nav class="top-category-bar" aria-label="Game Categories">
+      <div class="top-category-inner" id="topCategoryBar"></div>
+    </nav>
+  </header>
+
+  <!-- ========================================================================
+       MAIN WORKSPACE
+       ======================================================================== -->
+  <main class="main-wrap" id="top">
+
+    <!-- Hero Quick-Launch Bar -->
+    <section class="hero-bar" aria-label="Quick Launch and Verification">
+      <div class="hero-info">
+        <h1>Instant Multi-Engine Game Launcher</h1>
+        <p>Launch HTML5 hits, classic Flash games, and retro console ports with a single click.</p>
+      </div>
+
+      <div class="hero-actions">
+        <button type="button" class="btn-action featured" id="playFeaturedBtn">&#9654; Play Featured: Retro Bowl</button>
+        <button type="button" class="btn-action" id="smartRandomBtn">&#127922; Smart Random Game</button>
+        <button type="button" class="btn-action sync" id="syncRepoBtn">&#8635; Sync ~2,700+ Repo</button>
+        <button type="button" class="btn-action flash" id="verifyFlashBtn">&#9889; Verify Flash</button>
+        <button type="button" class="btn-action emu" id="verifyEmuBtn">&#128377;&#65039; Verify Emulated</button>
+        <button type="button" class="btn-action" id="verifySampleBtn">Verify Sample (100)</button>
+        <span class="sync-status-badge" id="syncStatusBadge">Starter Ready</span>
+        <button type="button" class="btn-action" id="toggleLogBtn">&#128203; Log Drawer</button>
+        <button type="button" class="btn-action restore" id="heroRestoreBtn" style="display:none;">Restore Removed (<span id="heroRestoreCount">0</span>)</button>
+      </div>
+    </section>
+
+    <!-- Collapsible Verification Summary Log Drawer (#logDrawer) -->
+    <section class="log-drawer" id="logDrawer" aria-label="Verification Summary Log">
+      <div class="log-drawer-header">
+        <div class="log-stats">
+          <span class="log-stat-pill">Verified: <strong id="statVerified">0</strong></span>
+          <span class="log-stat-pill">Repaired: <strong id="statRepaired">0</strong></span>
+          <span class="log-stat-pill">Failed / Removed: <strong id="statFailed">0</strong></span>
+          <span class="log-stat-pill">Playable Total: <strong id="statRepoTotal">0</strong></span>
+        </div>
+        <button type="button" class="btn-action" id="clearLogBtn">Clear Log</button>
+      </div>
+      <div class="log-progress-track">
+        <div class="log-progress-fill" id="logProgressFill"></div>
+      </div>
+      <div class="log-entries" id="logEntries">
+        <div>[Nova Arcade] Ready. Starter catalog loaded instantly.</div>
+      </div>
+    </section>
+
+    <!-- Platform Filter Bar -->
+    <nav class="platform-bar" id="platformBar" aria-label="Platform Filter">
+      <button type="button" class="platform-pill active" data-platform="all">
+        <span>All</span>
+        <span class="pill-count" id="platCountAll">0</span>
+      </button>
+      <button type="button" class="platform-pill" data-platform="emulated">
+        <span>&#128377;&#65039; Emulated</span>
+        <span class="pill-count" id="platCountEmulated">0</span>
+      </button>
+      <button type="button" class="platform-pill" data-platform="flash">
+        <span>&#9889; Flash</span>
+        <span class="pill-count" id="platCountFlash">0</span>
+      </button>
+      <button type="button" class="platform-pill" data-platform="html5">
+        <span>HTML5</span>
+        <span class="pill-count" id="platCountHtml5">0</span>
+      </button>
+      <button type="button" class="platform-pill" data-platform="external">
+        <span>&#9729;&#65039; External / Drive</span>
+        <span class="pill-count" id="platCountExternal">0</span>
+      </button>
+      <button type="button" class="platform-pill" data-platform="favorites">
+        <span>&#11088; Favorites</span>
+        <span class="pill-count" id="platCountFavorites">0</span>
+      </button>
+      <button type="button" class="platform-pill warn" id="jumpFailedPill">
+        <span>&#9888;&#65039; Failed (<span id="platCountFailed">0</span>)</span>
+      </button>
+    </nav>
+
+    <!-- Emulated Console Sub-Filter Bar (#consoleSubBar) -->
+    <div class="console-subbar" id="consoleSubBar" aria-label="Emulated Console Filter"></div>
+
+    <!-- Library Toolbar & Games Grid -->
+    <div class="library-toolbar">
+      <div class="library-heading">
+        <h2 id="libraryTitle">All Games</h2>
+        <span class="showing-pill" id="showingBadge">Showing 0 of 0</span>
+      </div>
+
+      <select class="sort-select" id="sortSelect" aria-label="Sort games">
+        <option value="featured">Sort: Featured Order</option>
+        <option value="az">Sort: A &rarr; Z</option>
+        <option value="za">Sort: Z &rarr; A</option>
+      </select>
+    </div>
+
+    <section class="games-grid" id="gamesGrid" aria-live="polite"></section>
+
+    <div class="pagination-bar" id="paginationBar">
+      <button type="button" class="btn-action" id="loadMoreBtn">Load More (+120)</button>
+      <button type="button" class="btn-action" id="showAllBtn">Show All</button>
+    </div>
+    <div id="scrollSentinel"></div>
+
+    <!-- Collapsible Failed Check Recovery Section (#failedSection) -->
+    <section class="failed-section" id="failedSection" aria-label="Failed Check Recovery">
+      <div class="failed-header">
+        <div>
+          <h3>&#9888;&#65039; Failed Check (<span id="failedSectionCount">0</span>)</h3>
+        </div>
+        <div class="failed-actions">
+          <button type="button" class="btn-action" id="recheckFailedBtn">&#8635; Re-check Failed (<span id="recheckFailedCount">0</span>)</button>
+          <button type="button" class="btn-action" id="restoreAllFailedBtn">Clear / Restore All</button>
+          <button type="button" class="btn-action" id="toggleFailedCollapseBtn">Collapse</button>
+        </div>
+      </div>
+      <div class="failed-body" id="failedBody">
+        <div class="failed-grid" id="failedGrid"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-inner">
+      <span>Nova Arcade &bull; Multi-Engine Web Game Launcher</span>
+      <button type="button" class="footer-link-btn" id="footerCreditsBtn">&#9878;&#65039; Credits, Open-Source &amp; Trademarks</button>
+    </div>
+  </footer>
+
+  <!-- ========================================================================
+       FULL-VIEWPORT IN-PAGE STAGE OVERLAY
+       ======================================================================== -->
+  <div class="stage-overlay" id="stageOverlay" aria-hidden="true">
+    <div class="stage-loader" id="stageLoader">
+      <div class="spinner"></div>
+      <div id="stageLoaderText" style="font-weight:700;font-size:0.94rem;">Loading game...</div>
+      <div id="stageErrorActions" style="display:none;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:6px;">
+        <button type="button" class="hud-btn" id="stageRetryBtn">&#8635; Retry</button>
+        <button type="button" class="hud-btn" id="stageRepairBtn">&#128269; Sync &amp; Auto-Repair</button>
+        <button type="button" class="hud-btn" id="stageErrorHomeBtn">&larr; Back to Home</button>
+      </div>
+    </div>
+
+    <div class="stage-hud" id="stageHud">
+      <button type="button" class="hud-btn" id="hudHomeBtn">&larr; Home</button>
+      <span class="hud-title" id="hudGameTitle">Game</span>
+      <button type="button" class="hud-btn" id="hudFocusBtn" title="Lock keyboard focus onto the game">&#127918; Focus</button>
+      <button type="button" class="hud-btn" id="hudFitBtn" title="Cycle game viewport scaling">Fit: Auto</button>
+      <button type="button" class="hud-btn" id="hudFullscreenBtn">Fullscreen</button>
+      <button type="button" class="hud-btn" id="hudPopoutBtn">Pop out</button>
+      <button type="button" class="hud-btn" id="hudHideBtn">Hide HUD</button>
+    </div>
+
+    <button type="button" class="hud-restore-pill" id="hudShowPill">Show HUD</button>
+    <iframe class="stage-frame" id="stageFrame" title="Game Stage" tabindex="0" allow="autoplay; fullscreen; gamepad; clipboard-read; clipboard-write" sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups allow-modals allow-downloads"></iframe>
+  </div>
+
+  <!-- ========================================================================
+       3-TAB + ADD GAME / ROM / URL MODAL
+       ======================================================================== -->
+  <div class="modal-backdrop" id="addModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
+    <div class="modal-card">
+      <div class="modal-top">
+        <h3 id="addModalTitle">&#43; Add Game / ROM / URL</h3>
+        <button type="button" class="modal-close-btn" id="closeAddModalBtn" aria-label="Close">&times;</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button type="button" class="modal-tab-btn active" data-addtab="repo">1. Repo .html File</button>
+        <button type="button" class="modal-tab-btn" data-addtab="rom">2. Local ROM (EmulatorJS)</button>
+        <button type="button" class="modal-tab-btn" data-addtab="url">3. External / Drive URL</button>
+      </div>
+
+      <!-- Tab 1: Repo .html File -->
+      <div class="modal-pane active" id="addPaneRepo">
+        <div class="field-group">
+          <label for="repoFileInput">Repository Filename (e.g. clretrobowl.html)</label>
+          <input type="text" class="field-input" id="repoFileInput" placeholder="clretrobowl.html">
+        </div>
+        <div class="field-group">
+          <label for="repoTitleInput">Display Title (optional)</label>
+          <input type="text" class="field-input" id="repoTitleInput" placeholder="Retro Bowl">
+        </div>
+        <button type="button" class="primary-add-btn" id="launchRepoFileBtn" style="justify-content:center;">Save &amp; Launch Repo File</button>
+      </div>
+
+      <!-- Tab 2: Local ROM via EmulatorJS -->
+      <div class="modal-pane" id="addPaneRom">
+        <div class="field-group">
+          <label for="romConsoleSelect">Target Console Core</label>
+          <select class="field-select" id="romConsoleSelect">
+            <option value="auto">Auto-detect from file extension</option>
+            <option value="nes">NES (.nes)</option>
+            <option value="snes">SNES (.sfc, .smc)</option>
+            <option value="gba">Game Boy Advance (.gba)</option>
+            <option value="gbc">Game Boy / Color (.gbc, .gb)</option>
+            <option value="n64">Nintendo 64 (.n64, .z64)</option>
+            <option value="nds">Nintendo DS (.nds)</option>
+            <option value="segaMD">Sega Genesis / Mega Drive (.md, .gen, .bin)</option>
+            <option value="psx">PlayStation 1 (.bin, .iso, .cue)</option>
+          </select>
+        </div>
+        <div class="rom-dropzone" id="romDropzone">
+          <strong>Click to select a local ROM file</strong><br>
+          <span style="font-size:0.74rem;color:#3b6e8c;">Supports .nes, .sfc, .smc, .gba, .gbc, .gb, .n64, .z64, .nds, .md, .gen, .bin, .iso</span>
+          <input type="file" id="romFileInput" accept=".nes,.sfc,.smc,.gba,.gbc,.gb,.n64,.z64,.nds,.md,.gen,.bin,.iso,.cue" style="display:none;">
+        </div>
+      </div>
+
+      <!-- Tab 3: Custom External / Google Drive URL -->
+      <div class="modal-pane" id="addPaneUrl">
+        <div class="field-group">
+          <label for="extTitleInput">Game Title</label>
+          <input type="text" class="field-input" id="extTitleInput" placeholder="My Custom Web Game">
+        </div>
+        <div class="field-group">
+          <label for="extUrlInput">Game or Google Drive URL</label>
+          <input type="url" class="field-input" id="extUrlInput" placeholder="https://...">
+        </div>
+        <div class="field-group">
+          <label for="extGenreSelect">Genre</label>
+          <select class="field-select" id="extGenreSelect"></select>
+        </div>
+        <button type="button" class="primary-add-btn" id="saveExtUrlBtn" style="justify-content:center;">Save &amp; Add to Library</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       TABBED CREDITS & TRADEMARKS MODAL
+       ======================================================================== -->
+  <div class="modal-backdrop" id="creditsModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="creditsModalTitle">
+    <div class="modal-card">
+      <div class="modal-top">
+        <h3 id="creditsModalTitle">&#9878;&#65039; Credits, Open-Source &amp; Trademarks</h3>
+        <button type="button" class="modal-close-btn" id="closeCreditsModalBtn" aria-label="Close">&times;</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button type="button" class="modal-tab-btn active" data-credtab="credits">Credits &amp; Open-Source</button>
+        <button type="button" class="modal-tab-btn" data-credtab="trademarks">Trademarks &amp; IP Notice</button>
+      </div>
+
+      <div class="modal-pane active" id="credPaneCredits">
+        <div class="credits-box">
+          <div><strong>Nova Arcade Launcher:</strong> Built as a fast, single-file web application for organizing and launching browser-playable HTML5, Flash, and emulated console titles.</div>
+          <div><strong>Open-Source Runtimes &amp; CDNs:</strong> Powered by EmulatorJS &amp; RetroArch WebAssembly cores, Ruffle Flash emulation, Ultimate Game Stash (<code>bubbls/ugs-singlefile</code>), and jsDelivr global CDN delivery.</div>
+          <div><strong>Local ROM Privacy:</strong> Local ROM files selected in the EmulatorJS loader run 100% client-side in your browser memory and are never uploaded to any external server.</div>
+        </div>
+      </div>
+
+      <div class="modal-pane" id="credPaneTrademarks">
+        <div class="credits-box">
+          <div><strong>Trademark Ownership:</strong> All game titles, character names, console names (Nintendo, N64, Game Boy Advance, Nintendo DS, SNES, NES, SEGA, PlayStation), and logos belong to their respective copyright and trademark holders.</div>
+          <div><strong>Disclaimer:</strong> Nova Arcade is an independent frontend interface and does not claim ownership over third-party games, ports, or open-source emulators.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Banner -->
+  <div class="toast-banner" id="toastBanner" role="status"></div>
+
+  <!-- ========================================================================
+       APPLICATION SCRIPT
+       ======================================================================== -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* ======================================================================
+         1. STORAGE KEYS, GENRES, CONSOLES & REPO CONSTANTS
+         ====================================================================== */
+      const STORAGE_KEYS = {
+        REPO_CACHE: 'nova_repo_cache_v9',
+        CUSTOM_GAMES: 'nova_custom_games_v1',
+        TYPE_OVERRIDES: 'nova_type_overrides_v1',
+        ALIAS_MAP: 'nova_alias_map_v1',
+        VERIFIED_GAMES: 'nova_verified_games_v1',
+        FAILED_GAMES: 'nova_failed_games',
+        REMOVED_GAMES: 'nova_removed_games',
+        FAVORITES: 'nova_favorites',
+        LAUNCH_MODE: 'nova_launch_mode'
+      };
+
+      const REPO_OWNER = 'bubbls';
+      const REPO_NAME = 'ugs-singlefile';
+
+      const GENRES = [
+        { id: 'ALL', label: 'All Genres', icon: '&#10024;' },
+        { id: 'action', label: 'Action', icon: '&#9876;&#65039;' },
+        { id: 'platformer', label: 'Platformer', icon: '&#127939;' },
+        { id: 'racing', label: 'Racing & Driving', icon: '&#127950;&#65039;' },
+        { id: 'sports', label: 'Sports', icon: '&#127944;' },
+        { id: 'strategy', label: 'Strategy & TD', icon: '&#127984;' },
+        { id: 'puzzle', label: 'Puzzle', icon: '&#129513;' },
+        { id: 'rpg', label: 'RPG & Adventure', icon: '&#128481;&#65039;' },
+        { id: 'sim', label: 'Simulation & Tycoon', icon: '&#127846;' },
+        { id: 'arcade', label: 'Arcade & Endless', icon: '&#128126;' },
+        { id: 'rhythm', label: 'Rhythm', icon: '&#127925;' },
+        { id: 'horror', label: 'Horror', icon: '&#128123;' },
+        { id: 'multiplayer', label: 'Multiplayer / .io', icon: '&#127760;' }
+      ];
+
+      const CONSOLES = ['ALL', 'N64', 'GBA', 'NDS', 'SNES', 'NES', 'GBC', 'SEGA', 'PS1', 'ARCADE', 'DOS', 'RETRO'];
+
+      /* ======================================================================
+         2. CURATED INSTANT STARTER CATALOG (VERIFIED AGAINST UTS LAUNCHER INDEX)
+         ====================================================================== */
+      const STARTER_RAW = `
+clretrobowl.html|Retro Bowl|html5||sports|
+clretrobowlcollege.html|Retro Bowl College|html5||sports|
+clslope.html|Slope|html5||arcade|
+clslope2player.html|Slope 2 Player|html5||arcade|
+clslope3.html|Slope 3|html5||arcade|
+clhollowknight.html|Hollow Knight Demake|emulated|GBA|platformer|
+clskong.html|Hollow Knight: Silksong Demake|emulated|GBA|platformer|
+clceleste.html|Celeste|html5||platformer|
+clceleste2.html|Celeste 2: Lani's Trek|html5||platformer|
+clundertale.html|Undertale|html5||rpg|
+clundertaleyellow.html|Undertale Yellow|html5||rpg|
+cldeltarune.html|Deltarune|html5||rpg|
+clterraria.html|Terraria|html5||sim|
+clcuphead.html|Cuphead|html5||action|
+clultrakill.html|Ultrakill|html5||action|
+clpeopleplayground.html|People Playground|html5||sim|
+clbaldisbasics.html|Baldi's Basics|html5||horror|
+clbaldisbasicsremaster.html|Baldi's Basics Remaster|html5||horror|
+clbendy.html|Bendy and the Ink Machine|html5||horror|
+clgettingoverit.html|Getting Over It|html5||platformer|
+clADOFAI.html|A Dance of Fire and Ice|html5||rhythm|
+clADarkRoom.html|A Dark Room|html5||rpg|
+closu.html|Osu!|html5||rhythm|
+clclusterrush.html|Cluster Rush|html5||platformer|
+clholeio.html|Hole.io|html5||multiplayer|
+clslitherio.html|Slither.io|html5||multiplayer|
+clagar.html|Agar.io Lite|html5||multiplayer|
+clFNAF.html|Five Nights at Freddy's|html5||horror|
+clFNAF2.html|Five Nights at Freddy's 2|html5||horror|
+clFNAF3.html|Five Nights at Freddy's 3|html5||horror|
+clFNAF4.html|Five Nights at Freddy's 4|html5||horror|
+clfnafsl.html|FNaF: Sister Location|html5||horror|
+clfnafucn.html|FNaF: Ultimate Custom Night|html5||horror|
+clmc152.html|Eaglercraft 1.5.2|html5||multiplayer|
+clmc18.html|Eaglercraft 1.8.8|html5||multiplayer|
+clgdlite.html|Geometry Dash Lite|html5||platformer|
+clgeometrydashscratch.html|Geometry Dash|html5||platformer|
+clrotmg.html|Realm of the Mad God|html5||rpg|
+cl1v1lol.html|1v1.LOL|html5||multiplayer|
+clsmashkarts.html|Smash Karts|html5||racing|
+clshellshockers.html|Shell Shockers|html5||multiplayer|
+clsnowrider.html|Snow Rider 3D|html5||sports|
+clsubwaysurferssanfrancisco.html|Subway Surfers: San Francisco|html5||arcade|
+cltemplerun2.html|Temple Run 2|html5||arcade|
+clcrossyroad.html|Crossy Road|html5||arcade|
+clflappybird.html|Flappy Bird|html5||arcade|
+cl2048.html|2048|html5||puzzle|
+clwordle.html|Wordle|html5||puzzle|
+cltetris.html|Tetris|html5||puzzle|
+clpacman.html|Pac-Man|html5||arcade|
+clminesweeperplus.html|Minesweeper Plus|html5||puzzle|
+clcookieclicker.html|Cookie Clicker|html5||sim|
+clbitlife.html|BitLife|html5||sim|
+cltinyfishing.html|Tiny Fishing|html5||arcade|
+cldrivemady.html|Drive Mad Y|html5||racing|
+clmotox3m2.html|Moto X3M 2|html5||racing|
+clmotox3m3.html|Moto X3M 3|html5||racing|
+clmotox3mwinter.html|Moto X3M Winter|html5||racing|
+clmotox3mpoolparty.html|Moto X3M Pool Party|html5||racing|
+clmotox3mspookyland.html|Moto X3M Spooky Land|html5||racing|
+clovo.html|OvO|html5||platformer|
+clovo2.html|OvO 2|html5||platformer|
+clvex3.html|Vex 3|html5||platformer|
+clvex4.html|Vex 4|html5||platformer|
+clvex5.html|Vex 5|html5||platformer|
+clvex6.html|Vex 6|html5||platformer|
+clvex7.html|Vex 7|html5||platformer|
+clvex8.html|Vex 8|html5||platformer|
+clfireboyandwatergirl.html|Fireboy & Watergirl: Forest Temple|html5||puzzle|
+clfireboyandwatergirl2.html|Fireboy & Watergirl 2: Light Temple|html5||puzzle|
+clfireboyandwatergirl3.html|Fireboy & Watergirl 3: Ice Temple|html5||puzzle|
+clfireboyandwatergirl5.html|Fireboy & Watergirl 5: Elements|html5||puzzle|
+clbasketballstars.html|Basketball Stars|html5||sports|
+clbasketrandom.html|Basket Random|html5||sports|
+clsoccerrandom.html|Soccer Random|html5||sports|
+clvolleyrandom.html|Volley Random|html5||sports|
+clboxingrandom.html|Boxing Random|html5||sports|
+clrooftopsnipers.html|Rooftop Snipers|html5||action|
+clrooftopsnipers2.html|Rooftop Snipers 2|html5||action|
+clgetawayshootout.html|Getaway Shootout|html5||action|
+clfunnyshooter2.html|Funny Shooter 2|html5||action|
+cltimeshooter2.html|Time Shooter 2|html5||action|
+cltimeshooter3.html|Time Shooter 3: SWAT|html5||action|
+clsuperhot.html|Superhot|html5||action|
+clstickmanhook.html|Stickman Hook|html5||platformer|
+clshortlife.html|Short Life|html5||platformer|
+clshortride.html|Short Ride|html5||racing|
+clhappywheels.html|Happy Wheels|html5||racing|
+cltunnelrush.html|Tunnel Rush|html5||arcade|
+cltunnelrushbetter.html|Tunnel Rush 2|html5||arcade|
+cldeathrun3d.html|Death Run 3D|html5||arcade|
+clstack.html|Stack|html5||arcade|
+clhelixjump.html|Helix Jump|html5||arcade|
+clcuttherope.html|Cut the Rope|html5||puzzle|
+clwheremywater.html|Where's My Water?|html5||puzzle|
+clworldshardestgame.html|World's Hardest Game|html5||puzzle|
+clworldshardestgame2.html|World's Hardest Game 2|html5||puzzle|
+clgooglesnake.html|Google Snake|html5||arcade|
+clgoogledino.html|Chrome Dino|html5||arcade|
+cldriftboss.html|Drift Boss|html5||racing|
+cldrifthuntersmerge.html|Drift Hunters|html5||racing|
+clmadstuntcars2.html|Madalin Stunt Cars 2|html5||racing|
+clpolytrack.html|PolyTrack|html5||racing|
+cleggycar.html|Eggy Car|html5||racing|
+clpaperio.html|Paper.io|html5||multiplayer|
+cldiepio.html|Diep.io|html5||multiplayer|
+clkrunker.html|Krunker.io|html5||multiplayer|
+clamongus.html|Among Us Singleplayer|html5||multiplayer|
+clfridaynightfunkin.html|Friday Night Funkin'|html5||rhythm|
+clbloonsTD1.html|Bloons TD|flash||strategy|
+clbloonsTD2.html|Bloons TD 2|flash||strategy|
+clbloonsTD3.html|Bloons TD 3|flash||strategy|
+clbloonsTD4.html|Bloons TD 4|flash||strategy|
+clbloonsTD5.html|Bloons TD 5|flash||strategy|
+clbtd5.html|Bloons TD 5 Deluxe|flash||strategy|
+clrun.html|Run|flash||platformer|
+clrun2.html|Run 2|flash||platformer|
+clrun3.html|Run 3|flash||platformer|
+clducklife.html|Duck Life|flash||sim|
+clducklife2.html|Duck Life 2|flash||sim|
+clducklife3.html|Duck Life 3: Evolution|flash||sim|
+clducklife4.html|Duck Life 4|flash||sim|
+clducklfie5.html|Duck Life 5: Treasure Hunt|flash||sim|
+clpapapizzagood.html|Papa's Pizzeria|flash||sim|
+clpapasburgerIIIAAAAAA.html|Papa's Burgeria|flash||sim|
+clpapastacomia.html|Papa's Taco Mia!|flash||sim|
+clpapasfreezeria.html|Papa's Freezeria|flash||sim|
+clpapaspancakeria.html|Papa's Pancakeria|flash||sim|
+clpapaswingeria.html|Papa's Wingeria|flash||sim|
+clpapashotdoggeria.html|Papa's Hot Doggeria|flash||sim|
+clpapascupcakeria.html|Papa's Cupcakeria|flash||sim|
+clpapaspastaria.html|Papa's Pastaria|flash||sim|
+clpapadonut.html|Papa's Donuteria|flash||sim|
+clpapascheeseria.html|Papa's Cheeseria|flash||sim|
+clpapabakeria.html|Papa's Bakeria|flash||sim|
+clpapassushiria.html|Papa's Sushiria|flash||sim|
+clpapasscooperia.html|Papa's Scooperia|flash||sim|
+clpapalouiewhenpizzasattack.html|Papa Louie: When Pizzas Attack!|flash||platformer|
+clpapalouiewhenburgersattack.html|Papa Louie 2: When Burgers Attack!|flash||platformer|
+clpapalouiewhensundaesattack.html|Papa Louie 3: When Sundaes Attack!|flash||platformer|
+cljacksmith.html|Jacksmith|flash||strategy|
+clstickminbreakingbank.html|Breaking the Bank|flash||rpg|
+clstickminescapingprison.html|Escaping the Prison|flash||rpg|
+clstickmanstealingdiamond.html|Stealing the Diamond|flash||rpg|
+clstickminairship.html|Infiltrating the Airship|flash||rpg|
+clstickminfleecomplex.html|Fleeing the Complex|flash||rpg|
+clcompletingthemission.html|Completing the Mission|flash||rpg|
+clriddleschool.html|Riddle School|flash||puzzle|
+clriddleschool2.html|Riddle School 2|flash||puzzle|
+clriddleschool3.html|Riddle School 3|flash||puzzle|
+clriddleschool445544444$$444$444.html|Riddle School 4|flash||puzzle|
+clriddlemiddleSchool.html|Riddle Middle School|flash||puzzle|
+clriddletransfer.html|Riddle Transfer|flash||puzzle|
+clriddletransfer2.html|Riddle Transfer 2|flash||puzzle|
+cl3pandas.html|3 Pandas|flash||puzzle|
+cl3pandasnight.html|3 Pandas 2: Night|flash||puzzle|
+cl3pandasbrazil.html|3 Pandas in Brazil|flash||puzzle|
+cl3pandasjapan.html|3 Pandas in Japan|flash||puzzle|
+cl3pandasfantasy.html|3 Pandas in Fantasy|flash||puzzle|
+clcactusmccoy.html|Cactus McCoy|flash||platformer|
+clcactusmccoy2.html|Cactus McCoy 2|flash||platformer|
+clelectricman2.html|Electric Man 2|flash||action|
+clthelaststand.html|The Last Stand|flash||action|
+clthelaststandunioncity.html|The Last Stand: Union City|flash||action|
+clhobo.html|Hobo|flash||action|
+clhobo2.html|Hobo 2: Prison Brawl|flash||action|
+clhobo3.html|Hobo 3: Wanted|flash||action|
+clhobo4.html|Hobo 4: Total War|flash||action|
+clhobo5.html|Hobo 5: Space Brawls|flash||action|
+clhobo6.html|Hobo 6: Hell|flash||action|
+clhobo7.html|Hobo 7: Heaven|flash||action|
+clsnailbob.html|Snail Bob|flash||puzzle|
+clsnailbob2.html|Snail Bob 2|flash||puzzle|
+clsnailbob3.html|Snail Bob 3|flash||puzzle|
+clsnailbob4space.html|Snail Bob 4: Space|flash||puzzle|
+clsnailbob5lovestory.html|Snail Bob 5: Love Story|flash||puzzle|
+clwheely.html|Wheely|flash||puzzle|
+clwheely2.html|Wheely 2|flash||puzzle|
+clwheely3.html|Wheely 3|flash||puzzle|
+clwheely4.html|Wheely 4|flash||puzzle|
+clwheely5.html|Wheely 5|flash||puzzle|
+clwheely6.html|Wheely 6|flash||puzzle|
+clwheely7.html|Wheely 7|flash||puzzle|
+clwheely8.html|Wheely 8|flash||puzzle|
+clbobtherobber.html|Bob the Robber|flash||puzzle|
+clbobtherobber2.html|Bob the Robber 2|flash||puzzle|
+clbobtherobber5.html|Bob the Robber 5: Temple Adventure|flash||puzzle|
+clredball.html|Red Ball|flash||platformer|
+clredball2.html|Red Ball 2|flash||platformer|
+clredball3.html|Red Ball 3|flash||platformer|
+clredball4.html|Red Ball 4|flash||platformer|
+clsugarsugar.html|Sugar, Sugar|flash||puzzle|
+clfactoryballs.html|Factory Balls|flash||puzzle|
+clfactoryballs2.html|Factory Balls 2|flash||puzzle|
+clfactoryballs3.html|Factory Balls 3|flash||puzzle|
+clfactoryballs4.html|Factory Balls 4|flash||puzzle|
+clachievementunlocked.html|Achievement Unlocked|flash||platformer|
+clachievementunlocked2.html|Achievement Unlocked 2|flash||platformer|
+clachievementunlocked3.html|Achievement Unlocked 3|flash||platformer|
+clthisistheonlylevel.html|This Is The Only Level|flash||platformer|
+clthisistheonlylevel2.html|This Is The Only Level 2|flash||platformer|
+clthisistheonlyleveltoo.html|This Is The Only Level Too|flash||platformer|
+clshift.html|Shift|flash||puzzle|
+clshift2.html|Shift 2|flash||puzzle|
+clshift3.html|Shift 3|flash||puzzle|
+clmotherload.html|Motherload|flash||sim|
+clshoppingcarthero3.html|Shopping Cart Hero 3|flash||arcade|
+clkittencannon.html|Kitten Cannon|flash||arcade|
+clinteractivebuddy.html|Interactive Buddy|flash||sim|
+cllearntofly.html|Learn to Fly|flash||arcade|
+cllearntofly2.html|Learn to Fly 2|flash||arcade|
+cllearntofly3.html|Learn to Fly 3|flash||arcade|
+clageofwar.html|Age of War|flash||strategy|
+clageofwar2.html|Age of War 2|flash||strategy|
+clstickwar.html|Stick War|flash||strategy|
+clstickwar2.html|Stick War 2|flash||strategy|
+clstrikeforceheroes.html|Strike Force Heroes|flash||action|
+clstrikeforceheroes2.html|Strike Force Heroes 2|flash||action|
+clstrikeforceheroes3.html|Strike Force Heroes 3|flash||action|
+clraze.html|Raze|flash||action|
+clraze2.html|Raze 2|flash||action|
+clraze3.html|Raze 3|flash||action|
+clplazmaburst.html|Plazma Burst|flash||action|
+clraftwars.html|Raft Wars|flash||strategy|
+clraftwars2.html|Raft Wars 2|flash||strategy|
+clearntodie.html|Earn to Die|flash||racing|
+clearntodie2.html|Earn to Die 2|flash||racing|
+clswordsandsandals.html|Swords and Sandals|flash||rpg|
+clswordsandsandals2.html|Swords and Sandals 2|flash||rpg|
+clportalflash.html|Portal: The Flash Version|flash||puzzle|
+clmeatboy.html|Meat Boy|flash||platformer|
+clalienhominid.html|Alien Hominid|flash||action|
+clfancypantsadventure.html|The Fancy Pants Adventures|flash||platformer|
+clfancypantsadventure2.html|The Fancy Pants Adventures: World 2|flash||platformer|
+clfancypantsadventure3.html|The Fancy Pants Adventures: World 3|flash||platformer|
+cllinerider.html|Line Rider|flash||sim|
+clsupermario64.html|Super Mario 64|emulated|N64|platformer|
+clmariokart64.html|Mario Kart 64|emulated|N64|racing|
+clocarinaoftime.html|The Legend of Zelda: Ocarina of Time|emulated|N64|rpg|
+clmajorasmask.html|The Legend of Zelda: Majora's Mask|emulated|N64|rpg|
+clsupersmashbros.html|Super Smash Bros. 64|emulated|N64|action|
+clbanjokazooie.html|Banjo-Kazooie|emulated|N64|platformer|
+clbanjotooie.html|Banjo-Tooie|emulated|N64|platformer|
+clpapermario.html|Paper Mario|emulated|N64|rpg|
+clmarioparty.html|Mario Party|emulated|N64|arcade|
+clmarioparty2.html|Mario Party 2|emulated|N64|arcade|
+clmarioparty3.html|Mario Party 3|emulated|N64|arcade|
+clpokemonstadium.html|Pokemon Stadium|emulated|N64|strategy|
+cldiddykong-racing.html|Diddy Kong Racing|emulated|N64|racing|
+clfzerox.html|F-Zero X|emulated|N64|racing|
+clwaverace64.html|Wave Race 64|emulated|N64|racing|
+clstarfox64.html|Star Fox 64|emulated|N64|action|
+clkirby64.html|Kirby 64: The Crystal Shards|emulated|N64|platformer|
+clpokemonemerald.html|Pokemon Emerald|emulated|GBA|rpg|
+clpokemonfirered.html|Pokemon FireRed|emulated|GBA|rpg|
+clpokemonleafgreen.html|Pokemon LeafGreen|emulated|GBA|rpg|
+clpokemonruby.html|Pokemon Ruby|emulated|GBA|rpg|
+clpokemonsapphire.html|Pokemon Sapphire|emulated|GBA|rpg|
+clpokemonmysterydungeon.html|Pokemon Mystery Dungeon: Red Rescue Team|emulated|GBA|rpg|
+clmariokartsupercircuit.html|Mario Kart: Super Circuit|emulated|GBA|racing|
+clmarioandluigisuperstarsaga.html|Mario & Luigi: Superstar Saga|emulated|GBA|rpg|
+clkirbyandtheamzingmirror.html|Kirby & The Amazing Mirror|emulated|GBA|platformer|
+clkirbysadventure.html|Kirby: Nightmare in Dream Land|emulated|GBA|platformer|
+clzeldaminishcap.html|The Legend of Zelda: The Minish Cap|emulated|GBA|rpg|
+clmetroidfusion.html|Metroid Fusion|emulated|GBA|action|
+clmetroidzeromission.html|Metroid: Zero Mission|emulated|GBA|action|
+clfireemblem.html|Fire Emblem|emulated|GBA|strategy|
+cladvancewars.html|Advance Wars|emulated|GBA|strategy|
+cladvancewars2.html|Advance Wars 2: Black Hole Rising|emulated|GBA|strategy|
+clgoldensun.html|Golden Sun|emulated|GBA|rpg|
+clcastlevaniaariaofsorrow.html|Castlevania: Aria of Sorrow|emulated|GBA|action|
+clsonicadvance.html|Sonic Advance|emulated|GBA|platformer|
+clsonicadvance2.html|Sonic Advance 2|emulated|GBA|platformer|
+clsonicadvance3.html|Sonic Advance 3|emulated|GBA|platformer|
+clgrandtheftautoadvance.html|Grand Theft Auto Advance|emulated|GBA|action|
+clchainofmemories.html|Kingdom Hearts: Chain of Memories|emulated|GBA|rpg|
+clmariokartds.html|Mario Kart DS|emulated|NDS|racing|
+clnewsupermariobros.html|New Super Mario Bros.|emulated|NDS|platformer|
+clpokeplatinum.html|Pokemon Platinum|emulated|NDS|rpg|
+clpokediamond.html|Pokemon Diamond|emulated|NDS|rpg|
+clpokepearl.html|Pokemon Pearl|emulated|NDS|rpg|
+clpokeheartgold.html|Pokemon HeartGold|emulated|NDS|rpg|
+clpokeblack.html|Pokemon Black|emulated|NDS|rpg|
+clpokewhite.html|Pokemon White|emulated|NDS|rpg|
+clpokeblack2.html|Pokemon Black 2|emulated|NDS|rpg|
+clpokewhite2.html|Pokemon White 2|emulated|NDS|rpg|
+cllozspirittracks.html|The Legend of Zelda: Spirit Tracks|emulated|NDS|rpg|
+clkirbysuperstarultra.html|Kirby Super Star Ultra|emulated|NDS|platformer|
+clsupermarioworld.html|Super Mario World|emulated|SNES|platformer|
+clsupermariokart.html|Super Mario Kart|emulated|SNES|racing|
+cllinktothepast.html|The Legend of Zelda: A Link to the Past|emulated|SNES|rpg|
+clsupermetroid.html|Super Metroid|emulated|SNES|action|
+cldonkeykongcountry.html|Donkey Kong Country|emulated|SNES|platformer|
+cldonkeykongcountry2.html|Donkey Kong Country 2|emulated|SNES|platformer|
+clchronotrigger.html|Chrono Trigger|emulated|SNES|rpg|
+clearthbound.html|EarthBound|emulated|SNES|rpg|
+clstreetfighter2turbo.html|Street Fighter II Turbo|emulated|SNES|action|
+clsupermariobros.html|Super Mario Bros.|emulated|NES|platformer|
+clsupermariobros3.html|Super Mario Bros. 3|emulated|NES|platformer|
+clloz1.html|The Legend of Zelda|emulated|NES|rpg|
+clpunchout.html|Mike Tyson's Punch-Out!!|emulated|NES|sports|
+clmegaman2.html|Mega Man 2|emulated|NES|action|
+clcontra.html|Contra|emulated|NES|action|
+clpokemoncrystal.html|Pokemon Crystal|emulated|GBC|rpg|
+clpokemongold.html|Pokemon Gold|emulated|GBC|rpg|
+clpokemonsilver.html|Pokemon Silver|emulated|GBC|rpg|
+clgrimacebirthday.html|Grimace's Birthday|emulated|GBC|platformer|
+clsonicthehedgehog.html|Sonic the Hedgehog|emulated|SEGA|platformer|
+clsonicthehedgehog2.html|Sonic the Hedgehog 2|emulated|SEGA|platformer|
+clsonic3andknuckles.html|Sonic 3 & Knuckles|emulated|SEGA|platformer|
+clcrashbandicoot.html|Crash Bandicoot|emulated|PS1|platformer|
+clcrashbandicoot2.html|Crash Bandicoot 2|emulated|PS1|platformer|
+clcrashteamracing.html|Crash Team Racing|emulated|PS1|racing|
+cltekken3.html|Tekken 3|emulated|PS1|action|
+clconkersbadfurday.html|Conker's Bad Fur Day|emulated|N64|platformer|
+clresidentevil2.html|Resident Evil 2|emulated|PS1|horror|
+clgranturismo2.html|Gran Turismo 2|emulated|PS1|racing|
+ext_eagler112.html|Eaglercraft 1.12.2 Client|external||multiplayer|https://eaglercraft.com/
+ext_papermc.html|Paper Minecraft (TurboWarp)|external||sim|https://turbowarp.org/10128407
+ext_appel.html|Appel (TurboWarp)|external||platformer|https://turbowarp.org/60917032
+ext_scratchterraria.html|Scratch Terraria (TurboWarp)|external||sim|https://turbowarp.org/322341152
+ext_scratchgd.html|Scratch Geometry Dash (TurboWarp)|external||platformer|https://turbowarp.org/105500895
+      `.trim();
+
+      /* ======================================================================
+         3. SMART TITLE HUMANIZER & PLATFORM / GENRE CLASSIFIER
+         ====================================================================== */
+      const EXACT_TITLE_MAP = {
+        btd: 'Bloons TD',
+        btd1: 'Bloons TD 1',
+        btd2: 'Bloons TD 2',
+        btd3: 'Bloons TD 3',
+        btd4: 'Bloons TD 4',
+        btd5: 'Bloons TD 5',
+        fnf: "Friday Night Funkin'",
+        '1v1lol': '1v1.LOL',
+        sm64: 'Super Mario 64',
+        mk64: 'Mario Kart 64',
+        mkds: 'Mario Kart DS',
+        oot: 'The Legend of Zelda: Ocarina of Time',
+        mm: "The Legend of Zelda: Majora's Mask",
+        alttp: 'The Legend of Zelda: A Link to the Past',
+        nsmb: 'New Super Mario Bros.',
+        sotn: 'Castlevania: Symphony of the Night',
+        ff7: 'Final Fantasy VII',
+        sf2: 'Street Fighter II',
+        mvc2: 'Marvel vs. Capcom 2',
+        fnaf: "Five Nights at Freddy's",
+        fnaf1: "Five Nights at Freddy's",
+        fnaf2: "Five Nights at Freddy's 2",
+        fnaf3: "Five Nights at Freddy's 3",
+        fnaf4: "Five Nights at Freddy's 4",
+        fnafsl: 'FNaF: Sister Location',
+        adofai: 'A Dance of Fire and Ice',
+        tboi: 'The Binding of Isaac',
+        mc152: 'Eaglercraft 1.5.2',
+        mc18: 'Eaglercraft 1.8.8',
+        gdlite: 'Geometry Dash Lite',
+        rotmg: 'Realm of the Mad God',
+        ssb64: 'Super Smash Bros. 64',
+        ssbm: 'Super Smash Bros. Melee',
+        drivemady: 'Drive Mad Y',
+        riddleschool445544444444444: 'Riddle School 4',
+        papasburgeriiiaaaaaa: "Papa's Burgeria",
+        papapizzagood: "Papa's Pizzeria",
+        papabakeria: "Papa's Bakeria",
+        papadonut: "Papa's Donuteria",
+        ducklfie5: 'Duck Life 5: Treasure Hunt',
+        kirbyandtheamzingmirror: 'Kirby & The Amazing Mirror',
+        thereisnofile: 'There Is No Game',
+        teod: 'The End of Disney',
+        cotlk: 'Cult of the Lamb',
+        btts: 'Big Tower Tiny Square',
+        btts2: 'Big Tower Tiny Square 2',
+        skong: 'Hollow Knight: Silksong Demake',
+        '3pandas': '3 Pandas',
+        '3pandasnight': '3 Pandas 2: Night',
+        '3pandasbrazil': '3 Pandas in Brazil',
+        '3pandasinbrazil': '3 Pandas in Brazil',
+        '3pandasjapan': '3 Pandas in Japan',
+        '3pandasinjapan': '3 Pandas in Japan',
+        '3pandasfantasy': '3 Pandas in Fantasy',
+        '3pandasinfantasy': '3 Pandas in Fantasy'
+      };
+
+      const VOCAB = new Set([
+        'super', 'mario', 'bros', 'kart', 'world', 'party', 'advance', 'luigi', 'yoshi', 'wario',
+        'donkey', 'kong', 'country', 'diddy', 'kirby', 'zelda', 'legend', 'ocarina', 'time',
+        'majora', 'mask', 'link', 'past', 'minish', 'cap', 'phantom', 'hourglass', 'spirit', 'tracks',
+        'pokemon', 'emerald', 'firered', 'leafgreen', 'ruby', 'sapphire', 'platinum', 'diamond',
+        'pearl', 'heartgold', 'soulsilver', 'black', 'white', 'crystal', 'gold', 'silver', 'stadium',
+        'mystery', 'dungeon', 'sonic', 'hedgehog', 'knuckles', 'metroid', 'fusion', 'zero', 'mission',
+        'prime', 'star', 'fox', 'earthbound', 'chrono', 'trigger', 'final', 'fantasy', 'street',
+        'fighter', 'mortal', 'kombat', 'tekken', 'crash', 'bandicoot', 'spyro', 'dragon', 'castlevania',
+        'aria', 'sorrow', 'symphony', 'night', 'mega', 'man', 'contra', 'punch', 'out', 'banjo',
+        'kazooie', 'tooie', 'paper', 'golden', 'sun', 'fire', 'emblem', 'wars', 'retro', 'bowl',
+        'college', 'slope', 'hollow', 'knight', 'celeste', 'classic', 'undertale', 'deltarune',
+        'terraria', 'cuphead', 'ultrakill', 'people', 'playground', 'baldi', 'basics', 'bendy',
+        'ink', 'machine', 'getting', 'over', 'dance', 'ice', 'cluster', 'rush', 'hole', 'slither',
+        'agar', 'five', 'nights', 'freddy', 'sister', 'location', 'eaglercraft', 'minecraft',
+        'geometry', 'dash', 'lite', 'realm', 'mad', 'god', 'smash', 'karts', 'shell', 'shockers',
+        'snow', 'rider', 'subway', 'surfers', 'temple', 'run', 'crossy', 'road', 'flappy', 'bird',
+        'wordle', 'tetris', 'pac', 'minesweeper', 'cookie', 'clicker', 'bitlife', 'tiny', 'fishing',
+        'drive', 'moto', 'winter', 'pool', 'spooky', 'land', 'vex', 'fireboy', 'watergirl', 'forest',
+        'light', 'basketball', 'stars', 'random', 'soccer', 'volley', 'boxing', 'rooftop', 'snipers',
+        'getaway', 'shootout', 'funny', 'shooter', 'swat', 'superhot', 'stickman', 'hook', 'short',
+        'life', 'ride', 'happy', 'wheels', 'tunnel', 'death', 'stack', 'helix', 'jump', 'cut', 'rope',
+        'where', 'water', 'hardest', 'game', 'google', 'snake', 'chrome', 'dino', 'drift', 'boss',
+        'hunters', 'madalin', 'stunt', 'cars', 'polytrack', 'eggy', 'car', 'krunker', 'among',
+        'friday', 'funkin', 'bloons', 'tower', 'defense', 'duck', 'evolution', 'papa', 'papas',
+        'pizzeria', 'burgeria', 'taco', 'mia', 'freezeria', 'pancakeria', 'wingeria', 'hot',
+        'doggeria', 'cupcakeria', 'pastaria', 'donuteria', 'cheeseria', 'bakeria', 'sushiria',
+        'scooperia', 'mocharia', 'cluckeria', 'louie', 'when', 'pizzas', 'attack', 'burgers',
+        'sundaes', 'jacksmith', 'breaking', 'bank', 'escaping', 'prison', 'stealing', 'ins',
+        'infiltrating', 'airship', 'fleeing', 'complex', 'completing', 'riddle', 'school',
+        'transfer', 'pandas', 'brazil', 'japan', 'cactus', 'mccoy', 'electric', 'last', 'stand',
+        'hobo', 'brawl', 'wanted', 'total', 'war', 'space', 'brawls', 'hell', 'heaven', 'snail',
+        'bob', 'wheely', 'robber', 'red', 'ball', 'sugar', 'factory', 'balls', 'achievement',
+        'unlocked', 'this', 'only', 'level', 'shift', 'motherload', 'crush', 'castle', 'shopping',
+        'cart', 'hero', 'kitten', 'cannon', 'interactive', 'buddy', 'learn', 'fly', 'age', 'stick',
+        'strike', 'force', 'heroes', 'raze', 'plazma', 'burst', 'raft', 'earn', 'die', 'swords',
+        'sandals', 'portal', 'flash', 'version', 'meat', 'boy', 'alien', 'hominid', 'fancy',
+        'pants', 'adventures', 'line', 'deluxe', 'ultra', 'racing', 'wave', 'race', 'crystal',
+        'shards', 'superstar', 'saga', 'inside', 'story', 'black', 'hole', 'rising', 'team',
+        'rescue', 'circuit', 'turbo', 'warped', 'riptos', 'rage', 'year', 'the', 'and', 'of', 'in', 'to'
+      ]);
+
+      function segmentConcatenatedWords(rawWord) {
+        const lower = rawWord.toLowerCase();
+        if (lower.length <= 3 || VOCAB.has(lower)) {
+          return [rawWord];
+        }
+
+        const n = lower.length;
+        const dp = new Array(n + 1).fill(null);
+        dp[0] = { score: 0, words: [] };
+
+        for (let i = 0; i < n; i++) {
+          if (!dp[i]) continue;
+          for (let j = i + 1; j <= Math.min(n, i + 18); j++) {
+            const sub = lower.slice(i, j);
+            const isKnown = VOCAB.has(sub);
+            const isNumber = /^\d+$/.test(sub);
+            if (!isKnown && !isNumber && sub.length > 1) continue;
+
+            let weight = 0;
+            if (isKnown) {
+              weight = sub.length >= 4 ? sub.length * 3.2 : (sub.length === 3 ? 4.5 : 1.2);
+            } else if (isNumber) {
+              weight = sub.length * 2.5;
+            } else {
+              weight = -2.2;
+            }
+
+            const candidateScore = dp[i].score + weight;
+            if (!dp[j] || candidateScore > dp[j].score) {
+              dp[j] = { score: candidateScore, words: dp[i].words.concat(sub) };
+            }
+          }
+        }
+
+        if (!dp[n]) return [rawWord];
+
+        // Merge consecutive 1-2 char unknown fragments so unknown words stay intact (e.g. "brazil", "pandas")
+        const merged = [];
+        for (const tok of dp[n].words) {
+          const isReal = VOCAB.has(tok) || /^\d+$/.test(tok);
+          if (!isReal && merged.length > 0 && !merged[merged.length - 1].real) {
+            merged[merged.length - 1].text += tok;
+          } else {
+            merged.push({ text: tok, real: isReal });
+          }
+        }
+        return merged.map(item => item.text);
+      }
+
+      function detectConsoleFromText(text) {
+        const s = String(text || '').toLowerCase();
+        if (/\b(n64|mario64|kart64|smashbros64|ocarina|majora|banjokazooie|banjotooie|papermario|diddykong|fzerox|waverace64|starfox64|kirby64|conker)\b/.test(s)) return 'N64';
+        if (/\b(gba|emerald|firered|leafgreen|minishcap|ariaofsorrow|superstarsaga|amazingmirror|nightmareindreamland|advancewars|goldensun|metroidfusion|zeromission|sonicadvance)\b/.test(s)) return 'GBA';
+        if (/\b(nds|mariokartds|newsupermariobros|heartgold|soulsilver|platinum|bowsersinsidestory|phantomhourglass|spirittracks|superstarultra)\b/.test(s)) return 'NDS';
+        if (/\b(snes|supermarioworld|alinktothepast|supermetroid|donkeykongcountry|chronotrigger|earthbound|streetfighter2)\b/.test(s)) return 'SNES';
+        if (/\b(nes|supermariobros|punchout|megaman2|contra)\b/.test(s)) return 'NES';
+        if (/\b(gbc|gb|pokemoncrystal|pokemongold|pokemonsilver)\b/.test(s)) return 'GBC';
+        if (/\b(sega|genesis|megadrive|sonicthehedgehog|sonic3andknuckles)\b/.test(s)) return 'SEGA';
+        if (/\b(ps1|psx|playstation|crashbandicoot|crashteamracing|spyro|symphonyofthenight|tekken3|ff7|residentevil2|granturismo2)\b/.test(s)) return 'PS1';
+        if (/\b(arcade|mame|neogeo|pacman|galaga|donkeykong)\b/.test(s)) return 'ARCADE';
+        if (/\b(dos|dosbox|doom|wolf3d|quake)\b/.test(s)) return 'DOS';
+        return '';
+      }
+
+      function humanizeFilename(file) {
+        let base = String(file || '')
+          .split('/').pop()
+          .replace(/\.html?$/i, '')
+          .replace(/^cl(?=[a-z0-9])/i, '');
+
+        let detectedConsole = detectConsoleFromText(base);
+        base = base.replace(/[\(\[\{_\-\s]+(n64|gba|nds|snes|nes|gbc|gb|sega|ps1|psx|arcade|dos|usa|europe|japan|rev\d+)[\)\]\}]*$/i, (_, tag) => {
+          const up = tag.toUpperCase();
+          if (['N64', 'GBA', 'NDS', 'SNES', 'NES', 'GBC', 'SEGA', 'PS1', 'ARCADE', 'DOS'].includes(up)) {
+            detectedConsole = up;
+          } else if (up === 'PSX') {
+            detectedConsole = 'PS1';
+          } else if (up === 'GB') {
+            detectedConsole = 'GBC';
+          }
+          return '';
+        });
+
+        const compactKey = base.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (EXACT_TITLE_MAP[compactKey]) {
+          return { title: EXACT_TITLE_MAP[compactKey], console: detectedConsole };
+        }
+
+        const rawTokens = base
+          .replace(/([a-z])([A-Z])/g, '$1 $2')
+          .replace(/([a-zA-Z])(\d+)/g, '$1 $2')
+          .replace(/(\d+)([a-zA-Z])/g, '$1 $2')
+          .split(/[\s_\-\.]+/)
+          .filter(Boolean);
+
+        const words = [];
+        for (const tok of rawTokens) {
+          if (/^[a-z]{5,}$/.test(tok)) {
+            words.push(...segmentConcatenatedWords(tok));
+          } else {
+            words.push(tok);
+          }
+        }
+
+        const smallWords = new Set(['a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 'to', 'from', 'by', 'in', 'of', 'vs']);
+        const romanNumerals = new Set(['ii', 'iii', 'iv', 'vi', 'vii', 'viii', 'ix', 'x']);
+
+        const formatted = words.map((w, idx) => {
+          const low = w.toLowerCase();
+          if (low === 'papas') return "Papa's";
+          if (low === 'majoras') return "Majora's";
+          if (low === 'bowsers') return "Bowser's";
+          if (low === 'riptos') return "Ripto's";
+          if (low === 'freddys') return "Freddy's";
+          if (low === 'worlds') return "World's";
+          if (low === 'wheres') return "Where's";
+          if (low === 'td') return 'TD';
+          if (low === 'io') return '.io';
+          if (low === '3d') return '3D';
+          if (low === '2d') return '2D';
+          if (romanNumerals.has(low)) return low.toUpperCase();
+          if (idx > 0 && smallWords.has(low)) return low;
+          return low.charAt(0).toUpperCase() + low.slice(1);
+        }).join(' ').replace(/\s+\.io\b/g, '.io');
+
+        return {
+          title: formatted || file,
+          console: detectedConsole
+        };
+      }
+
+      function classifyGenre(title) {
+        const s = String(title || '').toLowerCase();
+        if (/(mario kart|racing|drift|moto|car|drive|truck|speed|rally|stunt|f-zero|wave race|gran turismo|polytrack)/.test(s)) return 'racing';
+        if (/(bowl|soccer|football|basketball|volley|boxing|tennis|golf|punch-out|sports)/.test(s)) return 'sports';
+        if (/(bloons|tower defense|age of war|stick war|advance wars|crush the castle|raft wars|jacksmith|stadium|strategy)/.test(s)) return 'strategy';
+        if (/(puzzle|2048|wordle|tetris|minesweeper|pandas|riddle|snail bob|wheely|robber|sugar|factory balls|shift|cut the rope|water|hardest|portal)/.test(s)) return 'puzzle';
+        if (/(pokemon|zelda|undertale|deltarune|paper mario|superstar saga|bowser's inside|golden sun|chrono|earthbound|final fantasy|symphony|swords and sandals|realm of the mad god|henry|breaking|escaping|stealing|infiltrating|fleeing|completing)/.test(s)) return 'rpg';
+        if (/(papa's|duck life|terraria|cookie clicker|bitlife|motherload|interactive buddy|line rider|people playground)/.test(s)) return 'sim';
+        if (/(funkin|dance of fire|osu|rhythm|music|beat)/.test(s)) return 'rhythm';
+        if (/(freddy|fnaf|baldi|bendy|resident evil|horror|scary|zombie)/.test(s)) return 'horror';
+        if (/(\.io|1v1|krunker|among us|eaglercraft|multiplayer)/.test(s)) return 'multiplayer';
+        if (/(mario|sonic|celeste|hollow knight|kirby|donkey kong|crash|spyro|run |vex|ovo|geometry dash|red ball|cactus mccoy|fancy pants|meat boy|papa louie|getting over it|stickman hook|short life|cluster rush)/.test(s)) return 'platformer';
+        if (/(slope|subway|temple run|crossy|flappy|pac-man|snake|dino|tunnel|stack|helix|shopping cart|kitten cannon|learn to fly|tiny fishing)/.test(s)) return 'arcade';
+        return 'action';
+      }
+
+      /* ======================================================================
+         4. APPLICATION STATE & SAFE JSON STORAGE HELPERS
+         ====================================================================== */
+      function readJson(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : fallback;
+        } catch (e) {
+          return fallback;
+        }
+      }
+
+      function writeJson(key, val) {
+        try {
+          localStorage.setItem(key, JSON.stringify(val));
+        } catch (e) {}
+      }
+
+      const initialFailedArr = readJson(STORAGE_KEYS.FAILED_GAMES, []);
+      const failedMap = new Map();
+      if (Array.isArray(initialFailedArr)) {
+        for (const item of initialFailedArr) {
+          if (item && item.file) failedMap.set(item.file, item);
+        }
+      }
+
+      const state = {
+        allGames: [],
+        gameByFile: new Map(),
+        repoPathMap: new Map(),
+        aliasMap: readJson(STORAGE_KEYS.ALIAS_MAP, {}),
+        favorites: new Set(readJson(STORAGE_KEYS.FAVORITES, [])),
+        failedGames: failedMap,
+        removedGames: new Set(readJson(STORAGE_KEYS.REMOVED_GAMES, [])),
+        verifiedGames: new Set(readJson(STORAGE_KEYS.VERIFIED_GAMES, [])),
+        typeOverrides: readJson(STORAGE_KEYS.TYPE_OVERRIDES, {}),
+        customGames: readJson(STORAGE_KEYS.CUSTOM_GAMES, []),
+        activeGenre: 'ALL',
+        activePlatform: 'all',
+        activeConsole: 'ALL',
+        searchQuery: '',
+        sortBy: 'featured',
+        launchMode: localStorage.getItem(STORAGE_KEYS.LAUNCH_MODE) === 'blank' ? 'blank' : 'stage',
+        stageFitMode: 'auto',
+        visibleLimit: 120,
+        repoSyncedCount: 0,
+        isSyncing: false,
+        syncPromise: null,
+        isVerifying: false,
+        abortVerify: false,
+        htmlCache: new Map(),
+        activeStageGame: null,
+        activeBlobUrl: null
+      };
+
+      /* ======================================================================
+         5. DOM ELEMENT REFERENCES
+         ====================================================================== */
+      const dom = {
+        brandHomeBtn: document.getElementById('brandHomeBtn'),
+        countBadge: document.getElementById('countBadge'),
+        searchContainer: document.getElementById('searchContainer'),
+        searchInput: document.getElementById('searchInput'),
+        searchClearBtn: document.getElementById('searchClearBtn'),
+        modeStageBtn: document.getElementById('modeStageBtn'),
+        modeBlankBtn: document.getElementById('modeBlankBtn'),
+        headerCreditsBtn: document.getElementById('headerCreditsBtn'),
+        openAddModalBtn: document.getElementById('openAddModalBtn'),
+        topCategoryBar: document.getElementById('topCategoryBar'),
+        playFeaturedBtn: document.getElementById('playFeaturedBtn'),
+        smartRandomBtn: document.getElementById('smartRandomBtn'),
+        syncRepoBtn: document.getElementById('syncRepoBtn'),
+        verifyFlashBtn: document.getElementById('verifyFlashBtn'),
+        verifyEmuBtn: document.getElementById('verifyEmuBtn'),
+        verifySampleBtn: document.getElementById('verifySampleBtn'),
+        syncStatusBadge: document.getElementById('syncStatusBadge'),
+        toggleLogBtn: document.getElementById('toggleLogBtn'),
+        heroRestoreBtn: document.getElementById('heroRestoreBtn'),
+        heroRestoreCount: document.getElementById('heroRestoreCount'),
+        logDrawer: document.getElementById('logDrawer'),
+        statVerified: document.getElementById('statVerified'),
+        statRepaired: document.getElementById('statRepaired'),
+        statFailed: document.getElementById('statFailed'),
+        statRepoTotal: document.getElementById('statRepoTotal'),
+        clearLogBtn: document.getElementById('clearLogBtn'),
+        logProgressFill: document.getElementById('logProgressFill'),
+        logEntries: document.getElementById('logEntries'),
+        platformBar: document.getElementById('platformBar'),
+        platCountAll: document.getElementById('platCountAll'),
+        platCountEmulated: document.getElementById('platCountEmulated'),
+        platCountFlash: document.getElementById('platCountFlash'),
+        platCountHtml5: document.getElementById('platCountHtml5'),
+        platCountExternal: document.getElementById('platCountExternal'),
+        platCountFavorites: document.getElementById('platCountFavorites'),
+        platCountFailed: document.getElementById('platCountFailed'),
+        jumpFailedPill: document.getElementById('jumpFailedPill'),
+        consoleSubBar: document.getElementById('consoleSubBar'),
+        libraryTitle: document.getElementById('libraryTitle'),
+        showingBadge: document.getElementById('showingBadge'),
+        sortSelect: document.getElementById('sortSelect'),
+        gamesGrid: document.getElementById('gamesGrid'),
+        paginationBar: document.getElementById('paginationBar'),
+        loadMoreBtn: document.getElementById('loadMoreBtn'),
+        showAllBtn: document.getElementById('showAllBtn'),
+        scrollSentinel: document.getElementById('scrollSentinel'),
+        failedSection: document.getElementById('failedSection'),
+        failedSectionCount: document.getElementById('failedSectionCount'),
+        recheckFailedBtn: document.getElementById('recheckFailedBtn'),
+        recheckFailedCount: document.getElementById('recheckFailedCount'),
+        restoreAllFailedBtn: document.getElementById('restoreAllFailedBtn'),
+        toggleFailedCollapseBtn: document.getElementById('toggleFailedCollapseBtn'),
+        failedGrid: document.getElementById('failedGrid'),
+        footerCreditsBtn: document.getElementById('footerCreditsBtn'),
+        stageOverlay: document.getElementById('stageOverlay'),
+        stageLoader: document.getElementById('stageLoader'),
+        stageLoaderText: document.getElementById('stageLoaderText'),
+        stageErrorActions: document.getElementById('stageErrorActions'),
+        stageRetryBtn: document.getElementById('stageRetryBtn'),
+        stageRepairBtn: document.getElementById('stageRepairBtn'),
+        stageErrorHomeBtn: document.getElementById('stageErrorHomeBtn'),
+        stageHud: document.getElementById('stageHud'),
+        hudHomeBtn: document.getElementById('hudHomeBtn'),
+        hudGameTitle: document.getElementById('hudGameTitle'),
+        hudFocusBtn: document.getElementById('hudFocusBtn'),
+        hudFitBtn: document.getElementById('hudFitBtn'),
+        hudFullscreenBtn: document.getElementById('hudFullscreenBtn'),
+        hudPopoutBtn: document.getElementById('hudPopoutBtn'),
+        hudHideBtn: document.getElementById('hudHideBtn'),
+        hudShowPill: document.getElementById('hudShowPill'),
+        stageFrame: document.getElementById('stageFrame'),
+        addModalBackdrop: document.getElementById('addModalBackdrop'),
+        closeAddModalBtn: document.getElementById('closeAddModalBtn'),
+        repoFileInput: document.getElementById('repoFileInput'),
+        repoTitleInput: document.getElementById('repoTitleInput'),
+        launchRepoFileBtn: document.getElementById('launchRepoFileBtn'),
+        romConsoleSelect: document.getElementById('romConsoleSelect'),
+        romDropzone: document.getElementById('romDropzone'),
+        romFileInput: document.getElementById('romFileInput'),
+        extTitleInput: document.getElementById('extTitleInput'),
+        extUrlInput: document.getElementById('extUrlInput'),
+        extGenreSelect: document.getElementById('extGenreSelect'),
+        saveExtUrlBtn: document.getElementById('saveExtUrlBtn'),
+        creditsModalBackdrop: document.getElementById('creditsModalBackdrop'),
+        closeCreditsModalBtn: document.getElementById('closeCreditsModalBtn'),
+        toastBanner: document.getElementById('toastBanner')
+      };
+
+      /* ======================================================================
+         6. UTILITY & CATALOG PARSING HELPERS
+         ====================================================================== */
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      let toastTimer = null;
+      function showToast(msg) {
+        if (!dom.toastBanner) return;
+        dom.toastBanner.textContent = msg;
+        dom.toastBanner.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => dom.toastBanner.classList.remove('show'), 2800);
+      }
+
+      function appendLog(msg) {
+        if (!dom.logEntries) return;
+        const line = document.createElement('div');
+        const ts = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        line.textContent = `[${ts}] ${msg}`;
+        dom.logEntries.appendChild(line);
+        dom.logEntries.scrollTop = dom.logEntries.scrollHeight;
+      }
+
+      function normalizeKey(str) {
+        return String(str || '')
+          .split('/').pop()
+          .replace(/\.html?$/i, '')
+          .replace(/^cl(?=[a-z0-9])/i, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '');
+      }
+
+      function normalizeLooseKey(str) {
+        return normalizeKey(str)
+          .replace(/(?:in|the|of|and|to|for|with|on|at|version|usa|europe|japan|rev1|rev2|edition|deluxe)/g, '')
+          .replace(/1$/, '');
+      }
+
+      function extractSequelTag(str) {
+        const clean = String(str || '').replace(/\.html?$/i, '').toLowerCase();
+        const m = clean.match(/(?:^|[^0-9])([2-9]|10)(?:[^0-9]*)$/);
+        return m ? m[1] : '';
+      }
+
+      const SLUG_EXPANSIONS = [
+        ['bloonstd', 'btd'],
+        ['supermario64', 'sm64'],
+        ['mariokart64', 'mk64'],
+        ['mariokartds', 'mkds'],
+        ['newsupermariobros', 'nsmb'],
+        ['ocarinaoftime', 'oot'],
+        ['majorasmask', 'mm'],
+        ['alinktothepast', 'alttp'],
+        ['donkeykongcountry', 'dkc'],
+        ['supermariobros', 'smb'],
+        ['symphonyofthenight', 'sotn'],
+        ['finalfantasyvii', 'ff7', 'finalfantasy7'],
+        ['streetfighterii', 'sf2', 'streetfighter2'],
+        ['fivenightsatfreddys', 'fnaf'],
+        ['fridaynightfunkin', 'fnf'],
+        ['adanceoffireandice', 'adofai'],
+        ['thebindingofisaac', 'tboi', 'bindingofisaac'],
+        ['realmofthemadgod', 'rotmg'],
+        ['supersmashbros', 'ssb', 'ssb64'],
+        ['geometrydashlite', 'gdlite'],
+        ['eaglercraft152', 'mc152', 'minecraft152'],
+        ['eaglercraft188', 'mc18', 'minecraft18', 'eaglercraft18'],
+        ['crashbandicoot', 'crash'],
+        ['spyrothedragon', 'spyro'],
+        ['sonicthehedgehog', 'sonic'],
+        ['fancypantsadventure', 'fancypants'],
+        ['thelegendofzelda', 'zelda'],
+        ['pokemon', 'pkmn', 'poke']
+      ];
+
+      function diceSimilarity(a, b) {
+        if (!a || !b) return 0;
+        if (a === b) return 1;
+        if (a.length < 2 || b.length < 2) return 0;
+        const bigrams = new Map();
+        for (let i = 0; i < a.length - 1; i++) {
+          const bg = a.slice(i, i + 2);
+          bigrams.set(bg, (bigrams.get(bg) || 0) + 1);
+        }
+        let matches = 0;
+        for (let i = 0; i < b.length - 1; i++) {
+          const bg = b.slice(i, i + 2);
+          const cnt = bigrams.get(bg) || 0;
+          if (cnt > 0) {
+            bigrams.set(bg, cnt - 1);
+            matches++;
+          }
+        }
+        return (2 * matches) / (a.length + b.length - 2);
+      }
+
+      function findBestRepoPathMatch(game) {
+        if (state.repoPathMap.size === 0) return null;
+
+        const keys = new Set();
+        const rawBase = String(game.file || '').split('/').pop().replace(/\.html?$/i, '').toLowerCase();
+        const primaryKey = normalizeKey(game.file);
+        const looseKey = normalizeLooseKey(game.file);
+        const titleKey = normalizeKey(game.title);
+        const titleLoose = normalizeLooseKey(game.title);
+
+        [rawBase, primaryKey, looseKey, titleKey, titleLoose].forEach(k => {
+          if (k) keys.add(k);
+        });
+
+        for (const k of Array.from(keys)) {
+          keys.add(k.replace(/1$/, ''));
+          keys.add(k + '1');
+          for (const group of SLUG_EXPANSIONS) {
+            for (const variant of group) {
+              if (k.includes(variant)) {
+                for (const alt of group) {
+                  keys.add(k.replace(variant, alt));
+                }
+              }
+            }
+          }
+        }
+
+        for (const k of keys) {
+          if (state.repoPathMap.has(k)) {
+            return state.repoPathMap.get(k);
+          }
+        }
+
+        const wantSeq = extractSequelTag(game.file) || extractSequelTag(game.title);
+        let bestPath = null;
+        let bestScore = 0;
+
+        for (const [candKey, candPath] of state.repoPathMap.entries()) {
+          const candSeq = extractSequelTag(candKey);
+          if (wantSeq !== candSeq) continue;
+
+          if (candKey.includes(primaryKey) || primaryKey.includes(candKey)) {
+            const minLen = Math.min(candKey.length, primaryKey.length);
+            const maxLen = Math.max(candKey.length, primaryKey.length);
+            const ratio = minLen / maxLen;
+            if (ratio >= 0.56 && ratio > bestScore) {
+              bestScore = ratio;
+              bestPath = candPath;
+            }
+          } else {
+            const sim = diceSimilarity(primaryKey, candKey);
+            if (sim >= 0.76 && sim > bestScore) {
+              bestScore = sim;
+              bestPath = candPath;
+            }
+          }
+        }
+
+        return bestPath;
+      }
+
+      function addOrUpdateGame(entry) {
+        if (!entry || !entry.file) return;
+        const override = state.typeOverrides[entry.file];
+        if (override) {
+          entry.type = override.type || entry.type;
+          entry.console = override.console !== undefined ? override.console : entry.console;
+        }
+        if (state.aliasMap[entry.file]) {
+          entry.repoPath = state.aliasMap[entry.file];
+        }
+
+        const existing = state.gameByFile.get(entry.file);
+        if (existing) {
+          if (entry.repoPath) existing.repoPath = entry.repoPath;
+          if (entry.isExternal && entry.externalUrl) existing.externalUrl = entry.externalUrl;
+          return;
+        }
+        state.gameByFile.set(entry.file, entry);
+        state.allGames.push(entry);
+      }
+
+      function parseStarterCatalog() {
+        const lines = STARTER_RAW.split('\n');
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          const parts = trimmed.split('|');
+          const file = (parts[0] || '').trim();
+          const title = (parts[1] || '').trim();
+          const type = (parts[2] || 'html5').trim();
+          const consoleName = (parts[3] || '').trim();
+          const genre = (parts[4] || classifyGenre(title)).trim();
+          const externalUrl = (parts[5] || '').trim();
+          if (!file || !title) continue;
+
+          addOrUpdateGame({
+            file,
+            repoPath: `UGS-Files/${file}`,
+            title,
+            type,
+            console: consoleName,
+            genre,
+            isExternal: type === 'external' || Boolean(externalUrl),
+            externalUrl
+          });
+        }
+      }
+
+      function mergeRepoPathsIntoList(paths) {
+        if (!Array.isArray(paths) || paths.length === 0) return 0;
+        let added = 0;
+        const existingLoose = new Set();
+        for (const g of state.allGames) {
+          existingLoose.add(normalizeKey(g.file));
+          existingLoose.add(normalizeLooseKey(g.file));
+        }
+
+        for (const rawPath of paths) {
+          const cleanPath = String(rawPath || '').replace(/^\/+/, '');
+          if (!/\.html?$/i.test(cleanPath)) continue;
+          const filename = cleanPath.split('/').pop();
+          if (!filename || /^index\.html?$/i.test(filename)) continue;
+
+          const normKey = normalizeKey(filename);
+          const looseKey = normalizeLooseKey(filename);
+          if (normKey) state.repoPathMap.set(normKey, cleanPath);
+          if (looseKey && !state.repoPathMap.has(looseKey)) state.repoPathMap.set(looseKey, cleanPath);
+
+          // Update repoPath for any matching starter game
+          for (const g of state.allGames) {
+            if (!g.isExternal && (g.file === filename || normalizeKey(g.file) === normKey || normalizeLooseKey(g.file) === looseKey)) {
+              g.repoPath = cleanPath;
+            }
+          }
+
+          if (state.gameByFile.has(filename) || existingLoose.has(normKey) || existingLoose.has(looseKey)) {
+            continue;
+          }
+
+          const info = humanizeFilename(filename);
+          const isEmu = Boolean(info.console);
+          const isFlash = !isEmu && /(bloons|papa|henry|riddle|hobo|snail|wheely|robber|pandas|cactus|ducklife|run2|run3|learntofly|ageofwar|stickwar|raze|plazma|raftwars|earntodie|swordsandsandals|meatboy|fancypants)/i.test(filename);
+
+          addOrUpdateGame({
+            file: filename,
+            repoPath: cleanPath,
+            title: info.title,
+            type: isEmu ? 'emulated' : (isFlash ? 'flash' : 'html5'),
+            console: info.console || '',
+            genre: classifyGenre(info.title),
+            isExternal: false,
+            externalUrl: ''
+          });
+          existingLoose.add(normKey);
+          existingLoose.add(looseKey);
+          added++;
+        }
+
+        state.repoSyncedCount = state.repoPathMap.size;
+        return added;
+      }
+
+      /* ======================================================================
+         7. MULTI-CDN FETCHING & 404 FUZZY AUTO-REPAIR
+         ====================================================================== */
+      function encodeRepoPath(repoPath) {
+        return String(repoPath || '')
+          .split('/')
+          .map(seg => encodeURIComponent(seg))
+          .join('/');
+      }
+
+      function buildCdnUrlsForPath(repoPath) {
+        const clean = encodeRepoPath(String(repoPath || '').replace(/^\/+/, ''));
+        return [
+          `https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}/${clean}`,
+          `https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@main/${clean}`,
+          `https://fastly.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}/${clean}`,
+          `https://gcore.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@main/${clean}`,
+          `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${clean}`
+        ];
+      }
+
+      async function fetchWithTimeout(url, timeoutMs) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const resp = await fetch(url, { signal: controller.signal, cache: 'default' });
+          if (!resp.ok) {
+            throw new Error(`HTTP ${resp.status}`);
+          }
+          const text = await resp.text();
+          if (!text || text.length < 80) {
+            throw new Error('Empty payload');
+          }
+          const headSnippet = text.slice(0, 420);
+          if (/<title>\s*404\b/i.test(headSnippet) || /^404:\s*Not Found/i.test(headSnippet.trim())) {
+            throw new Error('HTTP 404');
+          }
+          return text;
+        } finally {
+          clearTimeout(timer);
+        }
+      }
+
+      async function fetchGameHtmlWithFallback(game, timeoutMs = 11000) {
+        if (state.htmlCache.has(game.file)) {
+          return { html: state.htmlCache.get(game.file), repaired: false };
+        }
+
+        const primaryPath = state.aliasMap[game.file] || game.repoPath || `UGS-Files/${game.file}`;
+        const fname = game.file.split('/').pop();
+        const lowerFname = fname.toLowerCase();
+        const candidatePaths = Array.from(new Set([
+          primaryPath,
+          `UGS-Files/${fname}`,
+          `UGS-Files/${lowerFname}`,
+          fname,
+          lowerFname,
+          `offline/${fname}`,
+          `offline/${lowerFname}`
+        ]));
+
+        let lastError = new Error('HTTP 404');
+
+        async function tryCandidateList(paths, isRepaired) {
+          for (const path of paths) {
+            const urls = buildCdnUrlsForPath(path);
+            for (const url of urls) {
+              try {
+                const html = await fetchWithTimeout(url, timeoutMs);
+                state.htmlCache.set(game.file, html);
+                if (isRepaired || path !== primaryPath) {
+                  game.repoPath = path;
+                  state.aliasMap[game.file] = path;
+                  writeJson(STORAGE_KEYS.ALIAS_MAP, state.aliasMap);
+                }
+                return { html, repaired: isRepaired || path !== primaryPath };
+              } catch (err) {
+                lastError = err;
+              }
+            }
+          }
+          return null;
+        }
+
+        const directResult = await tryCandidateList(candidatePaths, false);
+        if (directResult) return directResult;
+
+        // Ensure repository index is loaded before fuzzy matching
+        if (state.repoPathMap.size < 200) {
+          await syncLiveRepository(false);
+        }
+
+        const matchedPath = findBestRepoPathMatch(game);
+        if (matchedPath && !candidatePaths.includes(matchedPath)) {
+          const repairedResult = await tryCandidateList([matchedPath], true);
+          if (repairedResult) return repairedResult;
+        }
+
+        throw lastError;
+      }
+
+      /* ======================================================================
+         8. PLAYABLE HTML INJECTION (VIEWPORT FIT, FOCUS LOCK, RUFFLE & STORAGE)
+         ====================================================================== */
+      function preparePlayableHtml(rawHtml, game) {
+        const repoDir = (game && game.repoPath && game.repoPath.includes('/'))
+          ? game.repoPath.replace(/\/[^/]+$/, '/')
+          : 'UGS-Files/';
+        const baseHref = `https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@main/${repoDir}`;
+
+        let html = String(rawHtml || '');
+        html = html.replace(
+          /<script[^>]+src=["'][^"']*ruffle[^"']*\.js["'][^>]*>\s*<\/script>/gi,
+          '<script src="https://cdn.jsdelivr.net/npm/@ruffle-rs/ruffle@latest/ruffle.js" onerror="this.onerror=null;this.src=\'https://unpkg.com/@ruffle-rs/ruffle\'"><\/script>'
+        );
+
+        const helperBlock = `
+<base href="${baseHref}">
+<style id="nova-stage-fit-style">
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    background: #000 !important;
+  }
+  #nova-fit-wrapper {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #000;
+  }
+  #nova-fit-stage {
+    position: relative;
+    transform-origin: center center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+<script>
+(function() {
+  function installSafeStorage(name) {
+    try {
+      var s = window[name];
+      var k = '__nova_test__';
+      s.setItem(k, '1');
+      s.removeItem(k);
+    } catch (e) {
+      var mem = {};
+      var fallback = {
+        getItem: function(key) { return Object.prototype.hasOwnProperty.call(mem, key) ? mem[key] : null; },
+        setItem: function(key, val) { mem[String(key)] = String(val); },
+        removeItem: function(key) { delete mem[String(key)]; },
+        clear: function() { mem = {}; },
+        key: function(i) { return Object.keys(mem)[i] || null; },
+        get length() { return Object.keys(mem).length; }
+      };
+      try {
+        Object.defineProperty(window, name, { value: fallback, configurable: true });
+      } catch (err) {}
+    }
+  }
+  installSafeStorage('localStorage');
+  installSafeStorage('sessionStorage');
+
+  var CDN_MIRRORS = [
+    'https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile@main/',
+    'https://fastly.jsdelivr.net/gh/bubbls/ugs-singlefile@main/',
+    'https://gcore.jsdelivr.net/gh/bubbls/ugs-singlefile@main/',
+    'https://raw.githubusercontent.com/bubbls/ugs-singlefile/main/'
+  ];
+
+  var origFetch = window.fetch;
+  if (origFetch) {
+    window.fetch = function(input, init) {
+      var url = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+      return origFetch.apply(this, arguments).then(function(resp) {
+        if (!resp.ok && url && url.indexOf('bubbls/ugs-singlefile') !== -1) {
+          var rel = url.split('@main/')[1] || url.split('/main/')[1] || '';
+          if (rel) {
+            return origFetch(CDN_MIRRORS[1] + rel, init).catch(function() { return resp; });
+          }
+        }
+        return resp;
+      });
+    };
+  }
+
+  window.RufflePlayer = window.RufflePlayer || {};
+  window.RufflePlayer.config = Object.assign({
+    publicPath: 'https://cdn.jsdelivr.net/npm/@ruffle-rs/ruffle@latest/',
+    autoplay: 'on',
+    unmuteOverlay: 'hidden',
+    letterbox: 'on',
+    warnOnUnsupportedContent: false
+  }, window.RufflePlayer.config || {});
+
+  if (Element.prototype.requestFullscreen) {
+    var origReqFs = Element.prototype.requestFullscreen;
+    Element.prototype.requestFullscreen = function() {
+      try {
+        var p = origReqFs.apply(this, arguments);
+        if (p && typeof p.catch === 'function') {
+          return p.catch(function() {});
+        }
+        return p;
+      } catch (err) {
+        return Promise.resolve();
+      }
+    };
+  }
+
+  var currentFitMode = 'auto';
+  var hudSideReserve = 152;
+
+  function focusPlayableSurface() {
+    try {
+      window.focus();
+      var target = document.querySelector('canvas, ruffle-player, ruffle-embed, embed, object, iframe, [tabindex]');
+      if (target) {
+        if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '0');
+        target.focus({ preventScroll: true });
+        if (target.tagName === 'IFRAME' && target.contentWindow) {
+          target.contentWindow.focus();
+        }
+      }
+    } catch (e) {}
+  }
+
+  window.addEventListener('keydown', function(e) {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', ' '].indexOf(e.key) !== -1) {
+      var activeTag = document.activeElement ? document.activeElement.tagName : '';
+      if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+        e.preventDefault();
+      }
+    }
+  }, { passive: false });
+
+  window.addEventListener('pointerdown', focusPlayableSurface);
+
+  function measureNaturalBounds() {
+    var w = 0;
+    var h = 0;
+    var nodes = document.querySelectorAll('canvas, ruffle-player, ruffle-embed, embed, object, #game, #unity-container, #canvas');
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      var attrW = parseInt(el.getAttribute('width') || '0', 10);
+      var attrH = parseInt(el.getAttribute('height') || '0', 10);
+      var rect = el.getBoundingClientRect();
+      var ew = attrW || el.offsetWidth || Math.round(rect.width);
+      var eh = attrH || el.offsetHeight || Math.round(rect.height);
+      if (ew > w && ew <= 3840) w = ew;
+      if (eh > h && eh <= 2160) h = eh;
+    }
+    return { w: w, h: h };
+  }
+
+  function applyViewportScale() {
+    var wrapper = document.getElementById('nova-fit-wrapper');
+    var stage = document.getElementById('nova-fit-stage');
+    if (!wrapper || !stage) return;
+
+    wrapper.style.left = hudSideReserve + 'px';
+    var availW = Math.max(240, window.innerWidth - hudSideReserve - 12);
+    var availH = Math.max(200, window.innerHeight - 12);
+
+    if (currentFitMode === 'native') {
+      wrapper.style.overflow = 'auto';
+      stage.style.transform = 'none';
+      return;
+    }
+
+    wrapper.style.overflow = 'hidden';
+    var isEmulator = Boolean(window.EJS_player || document.querySelector('#game.ejs_parent, .ejs_game'));
+    if (isEmulator && currentFitMode === 'auto') {
+      stage.style.width = availW + 'px';
+      stage.style.height = availH + 'px';
+      stage.style.transform = 'none';
+      return;
+    }
+
+    var bounds = measureNaturalBounds();
+    var scale = 1;
+    if (currentFitMode === '90') scale = 0.9;
+    else if (currentFitMode === '80') scale = 0.8;
+    else if (currentFitMode === '70') scale = 0.7;
+    else if (bounds.w > 80 && bounds.h > 80) {
+      scale = Math.min(1, availW / bounds.w, availH / bounds.h);
+    }
+
+    stage.style.transform = 'scale(' + scale.toFixed(4) + ')';
+  }
+
+  function wrapBodyContent() {
+    if (!document.body || document.getElementById('nova-fit-wrapper')) return;
+    var wrapper = document.createElement('div');
+    wrapper.id = 'nova-fit-wrapper';
+    var stage = document.createElement('div');
+    stage.id = 'nova-fit-stage';
+    while (document.body.firstChild) {
+      stage.appendChild(document.body.firstChild);
+    }
+    wrapper.appendChild(stage);
+    document.body.appendChild(wrapper);
+    applyViewportScale();
+    focusPlayableSurface();
+  }
+
+  window.addEventListener('message', function(ev) {
+    if (!ev || !ev.data) return;
+    if (ev.data.type === 'nova-focus') {
+      focusPlayableSurface();
+    } else if (ev.data.type === 'nova-fit') {
+      currentFitMode = ev.data.mode || 'auto';
+      applyViewportScale();
+    } else if (ev.data.type === 'nova-hud-visibility') {
+      hudSideReserve = ev.data.visible ? 152 : 0;
+      applyViewportScale();
+    }
+  });
+
+  window.addEventListener('resize', applyViewportScale);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wrapBodyContent);
+  } else {
+    wrapBodyContent();
+  }
+
+  [250, 750, 1500, 3000, 4500].forEach(function(ms) {
+    setTimeout(function() {
+      applyViewportScale();
+      focusPlayableSurface();
+    }, ms);
+  });
+
+  if (typeof MutationObserver !== 'undefined') {
+    var obs = new MutationObserver(function() {
+      focusPlayableSurface();
+    });
+    window.addEventListener('DOMContentLoaded', function() {
+      if (document.body) obs.observe(document.body, { childList: true, subtree: true });
+    });
+  }
+})();
+<\/script>`;
+
+        if (/<head[^>]*>/i.test(html)) {
+          return html.replace(/<head[^>]*>/i, match => `${match}\n${helperBlock}`);
+        }
+        return `${helperBlock}\n${html}`;
+      }
+
+      /* ======================================================================
+         9. STAGE LAUNCHING, FOCUS LOCK & FIT CYCLING
+         ====================================================================== */
+      function setStageBlobHtml(html) {
+        if (state.activeBlobUrl) {
+          URL.revokeObjectURL(state.activeBlobUrl);
+          state.activeBlobUrl = null;
+        }
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        state.activeBlobUrl = URL.createObjectURL(blob);
+        dom.stageFrame.src = state.activeBlobUrl;
+      }
+
+      function focusStageGame() {
+        try {
+          dom.stageFrame.focus();
+          if (dom.stageFrame.contentWindow) {
+            dom.stageFrame.contentWindow.focus();
+            dom.stageFrame.contentWindow.postMessage({ type: 'nova-focus' }, '*');
+          }
+        } catch (e) {}
+      }
+
+      const FIT_ORDER = ['auto', '90', '80', '70', 'native'];
+      const FIT_LABELS = {
+        auto: 'Fit: Auto',
+        '90': 'Fit: 90%',
+        '80': 'Fit: 80%',
+        '70': 'Fit: 70%',
+        native: 'Fit: Native'
+      };
+
+      function cycleStageFit() {
+        const nextIdx = (FIT_ORDER.indexOf(state.stageFitMode) + 1) % FIT_ORDER.length;
+        state.stageFitMode = FIT_ORDER[nextIdx];
+        dom.hudFitBtn.textContent = FIT_LABELS[state.stageFitMode];
+        try {
+          if (dom.stageFrame.contentWindow) {
+            dom.stageFrame.contentWindow.postMessage({ type: 'nova-fit', mode: state.stageFitMode }, '*');
+          }
+        } catch (e) {}
+        focusStageGame();
+      }
+
+      async function openGame(game) {
+        if (!game) return;
+        state.activeStageGame = game;
+
+        if (game.isExternal && game.externalUrl) {
+          window.open(game.externalUrl, '_blank', 'noopener,noreferrer');
+          showToast(`Opened ${game.title} in a new tab`);
+          return;
+        }
+
+        if (state.launchMode === 'blank') {
+          const win = window.open('about:blank', '_blank');
+          if (!win) {
+            showToast('Pop-up blocked! Switching to In-Page Stage.');
+          } else {
+            win.document.write('<!DOCTYPE html><html><body style="margin:0;background:#031324;color:#fff;font-family:sans-serif;display:grid;place-items:center;height:100vh;">Loading ' + escapeHtml(game.title) + '...</body></html>');
+            try {
+              const res = await fetchGameHtmlWithFallback(game);
+              const playable = preparePlayableHtml(res.html, game);
+              win.document.open();
+              win.document.write(playable);
+              win.document.close();
+            } catch (err) {
+              win.document.body.innerHTML = `<div style="text-align:center;padding:24px;"><h2>Failed to load ${escapeHtml(game.title)}</h2><p>${escapeHtml(err.message)}</p></div>`;
+            }
+            return;
+          }
+        }
+
+        // In-Page Stage
+        dom.hudGameTitle.textContent = game.title;
+        dom.stageLoaderText.textContent = `Loading ${game.title}...`;
+        dom.stageErrorActions.style.display = 'none';
+        dom.stageLoader.classList.remove('hidden');
+        dom.stageOverlay.classList.add('active');
+        dom.stageOverlay.setAttribute('aria-hidden', 'false');
+
+        try {
+          const res = await fetchGameHtmlWithFallback(game);
+          const playable = preparePlayableHtml(res.html, game);
+          setStageBlobHtml(playable);
+          dom.stageLoader.classList.add('hidden');
+          setTimeout(focusStageGame, 120);
+          setTimeout(focusStageGame, 600);
+        } catch (err) {
+          dom.stageLoaderText.textContent = `Failed to load ${game.title}: ${err.message}`;
+          dom.stageErrorActions.style.display = 'flex';
+        }
+      }
+
+      function closeStage() {
+        dom.stageOverlay.classList.remove('active');
+        dom.stageOverlay.setAttribute('aria-hidden', 'true');
+        dom.stageFrame.src = 'about:blank';
+        if (state.activeBlobUrl) {
+          URL.revokeObjectURL(state.activeBlobUrl);
+          state.activeBlobUrl = null;
+        }
+        state.activeStageGame = null;
+      }
+
+      /* ======================================================================
+         10. LIVE ~2,700+ REPOSITORY SYNC & FULL-LIBRARY PLAYABILITY COMBER
+         ====================================================================== */
+      async function syncLiveRepository(forceRefresh = false) {
+        if (state.syncPromise) {
+          return state.syncPromise;
+        }
+
+        state.syncPromise = (async () => {
+          state.isSyncing = true;
+          dom.syncRepoBtn.disabled = true;
+          dom.syncStatusBadge.textContent = 'Syncing Repo...';
+
+          try {
+            if (!forceRefresh) {
+              const cached = readJson(STORAGE_KEYS.REPO_CACHE, null);
+              if (cached && Array.isArray(cached.paths) && cached.paths.length > 500) {
+                const added = mergeRepoPathsIntoList(cached.paths);
+                dom.syncStatusBadge.textContent = `Synced: ${state.repoPathMap.size.toLocaleString()} Repo Files`;
+                if (added > 0) renderAllUI();
+                return;
+              }
+            }
+
+            const endpoints = [
+              `https://data.jsdelivr.com/v1/packages/gh/${REPO_OWNER}/${REPO_NAME}@main?structure=flat`,
+              `https://data.jsdelivr.com/v1/package/gh/${REPO_OWNER}/${REPO_NAME}@main`,
+              `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/main?recursive=1`,
+              `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/master?recursive=1`
+            ];
+
+            let extractedPaths = [];
+            for (const url of endpoints) {
+              try {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 9000);
+                const resp = await fetch(url, { signal: controller.signal });
+                clearTimeout(timer);
+                if (!resp.ok) continue;
+                const data = await resp.json();
+
+                if (Array.isArray(data.files)) {
+                  extractedPaths = data.files.map(f => f.name || f.path || '').filter(Boolean);
+                } else if (Array.isArray(data.tree)) {
+                  extractedPaths = data.tree.filter(t => t.type === 'blob').map(t => t.path);
+                }
+
+                if (extractedPaths.length > 200) break;
+              } catch (e) {}
+            }
+
+            if (extractedPaths.length > 0) {
+              const added = mergeRepoPathsIntoList(extractedPaths);
+              writeJson(STORAGE_KEYS.REPO_CACHE, { ts: Date.now(), paths: extractedPaths });
+              dom.syncStatusBadge.textContent = `Synced: ${state.repoPathMap.size.toLocaleString()} Repo Files`;
+              appendLog(`Repository synced: ${state.repoPathMap.size.toLocaleString()} files indexed (+${added} new titles).`);
+              if (forceRefresh) {
+                showToast(`Synced ${state.repoPathMap.size.toLocaleString()} repository games!`);
+              }
+              renderAllUI();
+            } else {
+              dom.syncStatusBadge.textContent = `Starter (${state.allGames.length})`;
+            }
+          } finally {
+            state.isSyncing = false;
+            state.syncPromise = null;
+            dom.syncRepoBtn.disabled = false;
+          }
+        })();
+
+        return state.syncPromise;
+      }
+
+      function persistFailedAndRemoved() {
+        writeJson(STORAGE_KEYS.FAILED_GAMES, Array.from(state.failedGames.values()));
+        writeJson(STORAGE_KEYS.REMOVED_GAMES, Array.from(state.removedGames));
+        writeJson(STORAGE_KEYS.VERIFIED_GAMES, Array.from(state.verifiedGames));
+      }
+
+      function validatePlayablePayload(html) {
+        if (!html || html.length < 120) {
+          return { ok: false, reason: 'Empty or truncated file' };
+        }
+        const trimmed = html.trim();
+        if (/^(404|not found|access denied|error)/i.test(trimmed) && trimmed.length < 600) {
+          return { ok: false, reason: 'HTTP 404 / Access Denied response' };
+        }
+        const hasExecutableMarkup = /<(script|canvas|embed|object|iframe|ruffle-player|ruffle-embed)\b/i.test(html);
+        if (!hasExecutableMarkup) {
+          return { ok: false, reason: 'No playable canvas, embed, or script runtime found' };
+        }
+        return { ok: true, reason: '' };
+      }
+
+      function detectFlashInHtml(html) {
+        if (!html) return false;
+        return /(ruffle-player|ruffle-embed|@ruffle-rs\/ruffle|\.swf["'?])/i.test(html);
+      }
+
+      function detectEmulatorInHtml(html) {
+        if (!html) return null;
+        if (!/(EmulatorJS|EJS_player|EJS_core|RetroArch|gbajs|jsnes|n64wasm|desmume|mgba|snes9x|pcsx|dosbox)/i.test(html)) {
+          return null;
+        }
+        const coreMatch = html.match(/EJS_core\s*=\s*["']([^"']+)["']/i);
+        const core = coreMatch ? coreMatch[1].toLowerCase() : '';
+        let consoleName = 'RETRO';
+        if (core.includes('n64') || core.includes('mupen')) consoleName = 'N64';
+        else if (core.includes('gba') || core.includes('mgba')) consoleName = 'GBA';
+        else if (core.includes('nds') || core.includes('desmume') || core.includes('melonds')) consoleName = 'NDS';
+        else if (core.includes('snes')) consoleName = 'SNES';
+        else if (core.includes('nes')) consoleName = 'NES';
+        else if (core.includes('gb')) consoleName = 'GBC';
+        else if (core.includes('sega') || core.includes('genesis') || core.includes('pico')) consoleName = 'SEGA';
+        else if (core.includes('psx') || core.includes('pcsx')) consoleName = 'PS1';
+        else if (core.includes('arcade') || core.includes('mame') || core.includes('fbneo')) consoleName = 'ARCADE';
+        else if (core.includes('dos')) consoleName = 'DOS';
+        return { type: 'emulated', console: consoleName };
+      }
+
+      async function runVerificationBatch(targets, label) {
+        if (state.isVerifying) {
+          state.abortVerify = true;
+          showToast('Stopping active sweep...');
+          return;
+        }
+        const queue = targets.filter(g => g && !g.isExternal);
+        if (queue.length === 0) {
+          showToast('No verifiable repository games in this selection.');
+          return;
+        }
+
+        state.isVerifying = true;
+        state.abortVerify = false;
+        dom.logDrawer.classList.add('open');
+        dom.logProgressFill.style.width = '0%';
+        appendLog(`Starting ${label} (${queue.length.toLocaleString()} games, 10 workers)...`);
+
+        let completed = 0;
+        let verified = 0;
+        let repaired = 0;
+        let failed = 0;
+        let typesUpdated = false;
+        const total = queue.length;
+        let cursor = 0;
+
+        async function worker() {
+          while (cursor < total && !state.abortVerify) {
+            const idx = cursor++;
+            const game = queue[idx];
+            try {
+              const res = await fetchGameHtmlWithFallback(game, 9500);
+              const check = validatePlayablePayload(res.html);
+              if (!check.ok) {
+                throw new Error(check.reason);
+              }
+
+              verified++;
+              state.verifiedGames.add(game.file);
+              if (res.repaired) {
+                repaired++;
+                appendLog(`Repaired: ${game.title} -> ${game.repoPath}`);
+              }
+
+              const emuDetected = detectEmulatorInHtml(res.html);
+              if (emuDetected && (game.type !== 'emulated' || game.console !== emuDetected.console)) {
+                game.type = emuDetected.type;
+                game.console = emuDetected.console;
+                state.typeOverrides[game.file] = emuDetected;
+                typesUpdated = true;
+              } else if (!emuDetected && game.type === 'html5' && detectFlashInHtml(res.html)) {
+                game.type = 'flash';
+                state.typeOverrides[game.file] = { type: 'flash', console: '' };
+                typesUpdated = true;
+              }
+
+              state.failedGames.delete(game.file);
+              state.removedGames.delete(game.file);
+              if (total > 150) {
+                state.htmlCache.delete(game.file);
+              }
+            } catch (err) {
+              failed++;
+              state.verifiedGames.delete(game.file);
+              state.failedGames.set(game.file, {
+                file: game.file,
+                title: game.title,
+                reason: err && err.message ? err.message : 'CDN fetch failed'
+              });
+              state.removedGames.add(game.file);
+              appendLog(`Failed: ${game.title} (${game.file}) — ${err.message}`);
+            } finally {
+              completed++;
+              if (completed % 5 === 0 || completed === total) {
+                dom.statVerified.textContent = String(verified);
+                dom.statRepaired.textContent = String(repaired);
+                dom.statFailed.textContent = String(failed);
+                dom.logProgressFill.style.width = `${Math.round((completed / total) * 100)}%`;
+              }
+              if (completed % 120 === 0) {
+                persistFailedAndRemoved();
+                if (typesUpdated) writeJson(STORAGE_KEYS.TYPE_OVERRIDES, state.typeOverrides);
+                updatePlatformCounts();
+              }
+            }
+          }
+        }
+
+        const workers = Array.from({ length: Math.min(10, total) }, () => worker());
+        await Promise.all(workers);
+
+        if (typesUpdated) {
+          writeJson(STORAGE_KEYS.TYPE_OVERRIDES, state.typeOverrides);
+        }
+        persistFailedAndRemoved();
+        const wasAborted = state.abortVerify;
+        state.isVerifying = false;
+        state.abortVerify = false;
+        appendLog(`${label} ${wasAborted ? 'stopped' : 'finished'}: ${verified} playable, ${repaired} repaired, ${failed} removed.`);
+        showToast(`${label}: ${verified.toLocaleString()} playable, ${failed} failed`);
+        renderAllUI();
+      }
+
+      /* ======================================================================
+         11. FILTERING & UI RENDERING
+         ====================================================================== */
+      function getActivePlayableGames() {
+        return state.allGames.filter(g => !state.removedGames.has(g.file));
+      }
+
+      function getFilteredGames() {
+        const q = state.searchQuery.trim().toLowerCase();
+        let list = getActivePlayableGames().filter(g => {
+          if (state.activePlatform === 'favorites' && !state.favorites.has(g.file)) return false;
+          if (state.activePlatform === 'emulated' && g.type !== 'emulated') return false;
+          if (state.activePlatform === 'flash' && g.type !== 'flash') return false;
+          if (state.activePlatform === 'html5' && g.type !== 'html5') return false;
+          if (state.activePlatform === 'external' && !g.isExternal) return false;
+
+          if (state.activePlatform === 'emulated' && state.activeConsole !== 'ALL') {
+            if ((g.console || 'RETRO') !== state.activeConsole) return false;
+          }
+
+          if (state.activeGenre !== 'ALL' && g.genre !== state.activeGenre) return false;
+
+          if (q) {
+            const hay = `${g.title} ${g.file} ${g.console} ${g.genre} ${g.type}`.toLowerCase();
+            if (!hay.includes(q)) return false;
+          }
+          return true;
+        });
+
+        if (state.sortBy === 'az') {
+          list = list.slice().sort((a, b) => a.title.localeCompare(b.title));
+        } else if (state.sortBy === 'za') {
+          list = list.slice().sort((a, b) => b.title.localeCompare(a.title));
+        }
+        return list;
+      }
+
+      function renderTopCategoryBar() {
+        const activeGames = getActivePlayableGames();
+        const counts = { ALL: activeGames.length };
+        for (const g of activeGames) {
+          counts[g.genre] = (counts[g.genre] || 0) + 1;
+        }
+
+        dom.topCategoryBar.innerHTML = GENRES.map(gen => {
+          const activeClass = state.activeGenre === gen.id ? 'active' : '';
+          const cnt = counts[gen.id] || 0;
+          return `
+            <button type="button" class="cat-pill ${activeClass}" data-genre="${gen.id}">
+              <span>${gen.icon} ${escapeHtml(gen.label)}</span>
+              <span class="cat-pill-count">${cnt.toLocaleString()}</span>
+            </button>
+          `;
+        }).join('');
+      }
+
+      function renderConsoleSubBar() {
+        if (state.activePlatform !== 'emulated') {
+          dom.consoleSubBar.classList.remove('visible');
+          return;
+        }
+        dom.consoleSubBar.classList.add('visible');
+        const emuGames = getActivePlayableGames().filter(g => g.type === 'emulated');
+        const counts = { ALL: emuGames.length };
+        for (const g of emuGames) {
+          const c = g.console || 'RETRO';
+          counts[c] = (counts[c] || 0) + 1;
+        }
+
+        dom.consoleSubBar.innerHTML =
+          `<span class="console-label">Console:</span>` +
+          CONSOLES.filter(c => c === 'ALL' || (counts[c] || 0) > 0).map(c => {
+            const label = c === 'ALL' ? 'All Consoles' : c;
+            const activeClass = state.activeConsole === c ? 'active' : '';
+            return `<button type="button" class="console-pill ${activeClass}" data-console="${c}">${label} (${counts[c] || 0})</button>`;
+          }).join('');
+      }
+
+      function updatePlatformCounts() {
+        const active = getActivePlayableGames();
+        let emu = 0;
+        let flash = 0;
+        let html5 = 0;
+        let ext = 0;
+        let fav = 0;
+
+        for (const g of active) {
+          if (g.type === 'emulated') emu++;
+          else if (g.type === 'flash') flash++;
+          else if (g.isExternal) ext++;
+          else html5++;
+          if (state.favorites.has(g.file)) fav++;
+        }
+
+        dom.countBadge.textContent = `${active.length.toLocaleString()} Playable`;
+        dom.statRepoTotal.textContent = active.length.toLocaleString();
+        dom.platCountAll.textContent = active.length.toLocaleString();
+        dom.platCountEmulated.textContent = emu.toLocaleString();
+        dom.platCountFlash.textContent = flash.toLocaleString();
+        dom.platCountHtml5.textContent = html5.toLocaleString();
+        dom.platCountExternal.textContent = ext.toLocaleString();
+        dom.platCountFavorites.textContent = fav.toLocaleString();
+        dom.platCountFailed.textContent = String(state.failedGames.size);
+
+        if (state.removedGames.size > 0) {
+          dom.heroRestoreBtn.style.display = 'inline-flex';
+          dom.heroRestoreCount.textContent = String(state.removedGames.size);
+        } else {
+          dom.heroRestoreBtn.style.display = 'none';
+        }
+      }
+
+      function renderGamesGrid() {
+        const filtered = getFilteredGames();
+        const shown = filtered.slice(0, state.visibleLimit);
+
+        const activeGenObj = GENRES.find(x => x.id === state.activeGenre);
+        const genLabel = activeGenObj && activeGenObj.id !== 'ALL' ? activeGenObj.label : 'All Games';
+        dom.libraryTitle.textContent = state.activePlatform === 'emulated' && state.activeConsole !== 'ALL'
+          ? `${state.activeConsole} — ${genLabel}`
+          : genLabel;
+        dom.showingBadge.textContent = `Showing ${shown.length.toLocaleString()} of ${filtered.length.toLocaleString()}`;
+
+        if (shown.length === 0) {
+          dom.gamesGrid.innerHTML = `<div class="empty-state">No games match your current search or filter. Try clearing your search or switching categories.</div>`;
+          dom.paginationBar.style.display = 'none';
+          return;
+        }
+
+        dom.gamesGrid.innerHTML = shown.map(g => {
+          const isFav = state.favorites.has(g.file);
+          let badgeHtml = `<span class="type-badge">HTML5</span>`;
+          if (g.type === 'flash') badgeHtml = `<span class="type-badge flash">&#9889; Flash</span>`;
+          else if (g.type === 'emulated') badgeHtml = `<span class="type-badge emulated">&#128377;&#65039; Emulated</span>`;
+          else if (g.isExternal) badgeHtml = `<span class="type-badge external">&#9729;&#65039; External</span>`;
+
+          const consoleChip = g.console ? `<span class="console-chip">${escapeHtml(g.console)}</span>` : '';
+          const verifiedChip = state.verifiedGames.has(g.file)
+            ? `<span class="console-chip" style="color:#15803d;border-color:rgba(22,163,74,0.45);" title="Verified Playable">&#10003;</span>`
+            : '';
+          const subMeta = g.isExternal ? 'External / Drive Link' : escapeHtml(g.file);
+
+          return `
+            <article class="game-card type-${escapeHtml(g.type)}" data-file="${escapeHtml(g.file)}">
+              <div class="card-top">
+                <div class="card-badges">
+                  ${badgeHtml}
+                  ${consoleChip}
+                  ${verifiedChip}
+                </div>
+                <button type="button" class="fav-btn ${isFav ? 'active' : ''}" data-fav="${escapeHtml(g.file)}" aria-label="Favorite ${escapeHtml(g.title)}">&#9733;</button>
+              </div>
+              <div class="card-body">
+                <h3 class="card-title">${escapeHtml(g.title)}</h3>
+                <div class="card-meta">${subMeta}</div>
+              </div>
+              <div class="card-footer">
+                <span class="genre-tag">${escapeHtml(g.genre)}</span>
+                <button type="button" class="play-btn" data-play="${escapeHtml(g.file)}">&#9654; Play</button>
+              </div>
+            </article>
+          `;
+        }).join('');
+
+        dom.paginationBar.style.display = shown.length < filtered.length ? 'flex' : 'none';
+      }
+
+      function renderFailedSection() {
+        const items = Array.from(state.failedGames.values());
+        dom.failedSectionCount.textContent = String(items.length);
+        dom.recheckFailedCount.textContent = String(items.length);
+
+        if (items.length === 0) {
+          dom.failedGrid.innerHTML = `<div style="font-size:0.8rem;color:var(--text-secondary);font-weight:600;">No failed games recorded. Everything checked so far is playable!</div>`;
+          return;
+        }
+
+        dom.failedGrid.innerHTML = items.map(item => `
+          <div class="failed-card">
+            <div class="failed-card-title">${escapeHtml(item.title || item.file)}</div>
+            <div class="card-meta">${escapeHtml(item.file)}</div>
+            <div class="failed-reason">${escapeHtml(item.reason || 'Failed check')}</div>
+            <div class="failed-card-btns">
+              <button type="button" class="mini-recover-btn" data-retryfailed="${escapeHtml(item.file)}">&#8635; Re-test</button>
+              <button type="button" class="mini-recover-btn" data-restorefailed="${escapeHtml(item.file)}">Restore</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function renderAllUI() {
+        updatePlatformCounts();
+        renderTopCategoryBar();
+        renderConsoleSubBar();
+        renderGamesGrid();
+        renderFailedSection();
+      }
+
+      /* ======================================================================
+         12. LOCAL ROM LAUNCHER (EMULATORJS) & ADD GAME MODAL
+         ====================================================================== */
+      function detectCoreFromRomExt(filename) {
+        const ext = String(filename || '').split('.').pop().toLowerCase();
+        if (ext === 'nes') return 'nes';
+        if (ext === 'sfc' || ext === 'smc') return 'snes';
+        if (ext === 'gba') return 'gba';
+        if (ext === 'gbc' || ext === 'gb') return 'gbc';
+        if (ext === 'n64' || ext === 'z64') return 'n64';
+        if (ext === 'nds') return 'nds';
+        if (ext === 'md' || ext === 'gen') return 'segaMD';
+        return 'psx';
+      }
+
+      function launchLocalRomFile(file) {
+        if (!file) return;
+        const chosenCore = dom.romConsoleSelect.value === 'auto'
+          ? detectCoreFromRomExt(file.name)
+          : dom.romConsoleSelect.value;
+        const romUrl = URL.createObjectURL(file);
+
+        const emuHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>html,body,#game{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;}</style>
+</head>
+<body>
+  <div id="game"></div>
+  <script>
+    window.EJS_player = '#game';
+    window.EJS_core = ${JSON.stringify(chosenCore)};
+    window.EJS_gameName = ${JSON.stringify(file.name)};
+    window.EJS_color = '#0284c7';
+    window.EJS_startOnLoaded = true;
+    window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+    window.EJS_gameUrl = ${JSON.stringify(romUrl)};
+  <\/script>
+  <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
+</body>
+</html>`;
+
+        dom.addModalBackdrop.classList.remove('open');
+        dom.hudGameTitle.textContent = file.name;
+        dom.stageLoader.classList.add('hidden');
+        dom.stageOverlay.classList.add('active');
+        dom.stageOverlay.setAttribute('aria-hidden', 'false');
+        setStageBlobHtml(emuHtml);
+        setTimeout(focusStageGame, 250);
+      }
+
+      function populateGenreDropdown() {
+        dom.extGenreSelect.innerHTML = GENRES
+          .filter(g => g.id !== 'ALL')
+          .map(g => `<option value="${g.id}">${escapeHtml(g.label)}</option>`)
+          .join('');
+      }
+
+      /* ======================================================================
+         13. EVENT BINDINGS & STARTUP
+         ====================================================================== */
+      function bindClick(el, fn) {
+        if (el) el.addEventListener('click', fn);
+      }
+
+      function bindEvents() {
+        bindClick(dom.brandHomeBtn, e => {
+          e.preventDefault();
+          state.activeGenre = 'ALL';
+          state.activePlatform = 'all';
+          state.activeConsole = 'ALL';
+          state.searchQuery = '';
+          dom.searchInput.value = '';
+          dom.searchContainer.classList.remove('has-query');
+          state.visibleLimit = 120;
+          document.querySelectorAll('#platformBar .platform-pill[data-platform]').forEach(p => {
+            p.classList.remove('active', 'active-emu', 'active-flash', 'active-ext');
+            if (p.dataset.platform === 'all') p.classList.add('active');
+          });
+          renderAllUI();
+        });
+
+        dom.searchInput.addEventListener('input', () => {
+          state.searchQuery = dom.searchInput.value;
+          dom.searchContainer.classList.toggle('has-query', Boolean(state.searchQuery));
+          state.visibleLimit = 120;
+          renderGamesGrid();
+        });
+
+        bindClick(dom.searchClearBtn, () => {
+          state.searchQuery = '';
+          dom.searchInput.value = '';
+          dom.searchContainer.classList.remove('has-query');
+          renderGamesGrid();
+          dom.searchInput.focus();
+        });
+
+        document.addEventListener('keydown', e => {
+          if (e.key === '/' && document.activeElement !== dom.searchInput && !dom.stageOverlay.classList.contains('active')) {
+            e.preventDefault();
+            dom.searchInput.focus();
+          } else if (e.key === 'Escape') {
+            if (dom.addModalBackdrop.classList.contains('open')) dom.addModalBackdrop.classList.remove('open');
+            else if (dom.creditsModalBackdrop.classList.contains('open')) dom.creditsModalBackdrop.classList.remove('open');
+            else if (document.activeElement === dom.searchInput && dom.searchInput.value) {
+              state.searchQuery = '';
+              dom.searchInput.value = '';
+              dom.searchContainer.classList.remove('has-query');
+              renderGamesGrid();
+            }
+          }
+        });
+
+        [dom.modeStageBtn, dom.modeBlankBtn].forEach(btn => {
+          bindClick(btn, () => {
+            state.launchMode = btn.dataset.mode;
+            localStorage.setItem(STORAGE_KEYS.LAUNCH_MODE, state.launchMode);
+            dom.modeStageBtn.classList.toggle('active', state.launchMode === 'stage');
+            dom.modeBlankBtn.classList.toggle('active', state.launchMode === 'blank');
+          });
+        });
+
+        bindClick(dom.playFeaturedBtn, () => {
+          const featured = state.gameByFile.get('clretrobowl.html') || getActivePlayableGames()[0];
+          if (featured) openGame(featured);
+        });
+
+        bindClick(dom.smartRandomBtn, () => {
+          const pool = getFilteredGames();
+          const source = pool.length > 0 ? pool : getActivePlayableGames();
+          if (source.length === 0) return;
+          const pick = source[Math.floor(Math.random() * source.length)];
+          openGame(pick);
+        });
+
+        bindClick(dom.syncRepoBtn, () => syncLiveRepository(true));
+
+        bindClick(dom.verifyFlashBtn, () => {
+          const targets = getActivePlayableGames().filter(g => g.type === 'flash');
+          runVerificationBatch(targets, 'Flash Games Verification');
+        });
+
+        bindClick(dom.verifyEmuBtn, () => {
+          const targets = getActivePlayableGames().filter(g => g.type === 'emulated');
+          runVerificationBatch(targets, 'Emulated Games Verification');
+        });
+
+        bindClick(dom.verifySampleBtn, () => {
+          const targets = getActivePlayableGames().filter(g => !g.isExternal).slice(0, 100);
+          runVerificationBatch(targets, 'Sample Verification (100)');
+        });
+
+        bindClick(dom.toggleLogBtn, () => dom.logDrawer.classList.toggle('open'));
+        bindClick(dom.clearLogBtn, () => { dom.logEntries.innerHTML = ''; });
+
+        bindClick(dom.heroRestoreBtn, () => {
+          state.removedGames.clear();
+          state.failedGames.clear();
+          persistFailedAndRemoved();
+          renderAllUI();
+          showToast('All removed games restored.');
+        });
+
+        dom.topCategoryBar.addEventListener('click', e => {
+          const pill = e.target.closest('.cat-pill');
+          if (!pill) return;
+          state.activeGenre = pill.dataset.genre || 'ALL';
+          state.visibleLimit = 120;
+          renderTopCategoryBar();
+          renderGamesGrid();
+        });
+
+        dom.platformBar.addEventListener('click', e => {
+          const pill = e.target.closest('.platform-pill[data-platform]');
+          if (!pill) return;
+          state.activePlatform = pill.dataset.platform;
+          state.activeConsole = 'ALL';
+          state.visibleLimit = 120;
+          document.querySelectorAll('#platformBar .platform-pill[data-platform]').forEach(p => {
+            p.classList.remove('active', 'active-emu', 'active-flash', 'active-ext');
+          });
+          if (state.activePlatform === 'emulated') pill.classList.add('active-emu');
+          else if (state.activePlatform === 'flash') pill.classList.add('active-flash');
+          else if (state.activePlatform === 'external') pill.classList.add('active-ext');
+          else pill.classList.add('active');
+
+          renderConsoleSubBar();
+          renderGamesGrid();
+        });
+
+        bindClick(dom.jumpFailedPill, () => {
+          dom.failedSection.classList.remove('collapsed');
+          dom.failedSection.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        dom.consoleSubBar.addEventListener('click', e => {
+          const pill = e.target.closest('.console-pill');
+          if (!pill) return;
+          state.activeConsole = pill.dataset.console || 'ALL';
+          state.visibleLimit = 120;
+          renderConsoleSubBar();
+          renderGamesGrid();
+        });
+
+        dom.sortSelect.addEventListener('change', () => {
+          state.sortBy = dom.sortSelect.value;
+          renderGamesGrid();
+        });
+
+        dom.gamesGrid.addEventListener('click', e => {
+          const favBtn = e.target.closest('[data-fav]');
+          if (favBtn) {
+            e.stopPropagation();
+            const f = favBtn.dataset.fav;
+            if (state.favorites.has(f)) state.favorites.delete(f);
+            else state.favorites.add(f);
+            writeJson(STORAGE_KEYS.FAVORITES, Array.from(state.favorites));
+            updatePlatformCounts();
+            renderGamesGrid();
+            return;
+          }
+
+          const card = e.target.closest('.game-card');
+          if (card && card.dataset.file) {
+            const game = state.gameByFile.get(card.dataset.file);
+            if (game) openGame(game);
+          }
+        });
+
+        bindClick(dom.loadMoreBtn, () => {
+          state.visibleLimit += 120;
+          renderGamesGrid();
+        });
+
+        bindClick(dom.showAllBtn, () => {
+          state.visibleLimit = 99999;
+          renderGamesGrid();
+        });
+
+        // Failed Section Actions
+        bindClick(dom.toggleFailedCollapseBtn, () => {
+          dom.failedSection.classList.toggle('collapsed');
+          dom.toggleFailedCollapseBtn.textContent = dom.failedSection.classList.contains('collapsed') ? 'Expand' : 'Collapse';
+        });
+
+        bindClick(dom.restoreAllFailedBtn, () => {
+          state.failedGames.clear();
+          state.removedGames.clear();
+          persistFailedAndRemoved();
+          renderAllUI();
+          showToast('Restored all failed games.');
+        });
+
+        bindClick(dom.recheckFailedBtn, () => {
+          const targets = Array.from(state.failedGames.keys())
+            .map(f => state.gameByFile.get(f))
+            .filter(Boolean);
+          runVerificationBatch(targets, 'Re-check Failed');
+        });
+
+        dom.failedGrid.addEventListener('click', async e => {
+          const restoreBtn = e.target.closest('[data-restorefailed]');
+          if (restoreBtn) {
+            const f = restoreBtn.dataset.restorefailed;
+            state.failedGames.delete(f);
+            state.removedGames.delete(f);
+            persistFailedAndRemoved();
+            renderAllUI();
+            return;
+          }
+          const retryBtn = e.target.closest('[data-retryfailed]');
+          if (retryBtn) {
+            const f = retryBtn.dataset.retryfailed;
+            const game = state.gameByFile.get(f);
+            if (game) await runVerificationBatch([game], `Re-test ${game.title}`);
+          }
+        });
+
+        // Stage HUD Controls
+        bindClick(dom.hudHomeBtn, closeStage);
+        bindClick(dom.stageErrorHomeBtn, closeStage);
+        bindClick(dom.hudFocusBtn, focusStageGame);
+        bindClick(dom.hudFitBtn, cycleStageFit);
+
+        bindClick(dom.stageRetryBtn, () => {
+          if (state.activeStageGame) {
+            state.htmlCache.delete(state.activeStageGame.file);
+            openGame(state.activeStageGame);
+          }
+        });
+
+        bindClick(dom.stageRepairBtn, async () => {
+          if (!state.activeStageGame) return;
+          dom.stageLoaderText.textContent = 'Syncing repository index & searching for mirror...';
+          await syncLiveRepository(true);
+          state.htmlCache.delete(state.activeStageGame.file);
+          openGame(state.activeStageGame);
+        });
+
+        bindClick(dom.hudFullscreenBtn, () => {
+          try {
+            if (!document.fullscreenElement) {
+              if (document.fullscreenEnabled === false) {
+                showToast('Fullscreen blocked by embed frame — use Pop out instead.');
+                return;
+              }
+              const p = dom.stageOverlay.requestFullscreen();
+              if (p && typeof p.catch === 'function') {
+                p.catch(() => showToast('Fullscreen blocked by embed frame — use Pop out instead.'));
+              }
+            } else {
+              const p = document.exitFullscreen();
+              if (p && typeof p.catch === 'function') p.catch(() => {});
+            }
+          } catch (err) {
+            showToast('Fullscreen blocked by embed frame — use Pop out instead.');
+          }
+        });
+
+        bindClick(dom.hudPopoutBtn, () => {
+          if (!state.activeStageGame) return;
+          const prevMode = state.launchMode;
+          state.launchMode = 'blank';
+          openGame(state.activeStageGame);
+          state.launchMode = prevMode;
+        });
+
+        bindClick(dom.hudHideBtn, () => {
+          dom.stageHud.classList.add('hud-hidden');
+          dom.hudShowPill.classList.add('visible');
+          try {
+            if (dom.stageFrame.contentWindow) {
+              dom.stageFrame.contentWindow.postMessage({ type: 'nova-hud-visibility', visible: false }, '*');
+            }
+          } catch (e) {}
+        });
+
+        bindClick(dom.hudShowPill, () => {
+          dom.stageHud.classList.remove('hud-hidden');
+          dom.hudShowPill.classList.remove('visible');
+          try {
+            if (dom.stageFrame.contentWindow) {
+              dom.stageFrame.contentWindow.postMessage({ type: 'nova-hud-visibility', visible: true }, '*');
+            }
+          } catch (e) {}
+        });
+
+        // Add Game / ROM Modal
+        bindClick(dom.openAddModalBtn, () => dom.addModalBackdrop.classList.add('open'));
+        bindClick(dom.closeAddModalBtn, () => dom.addModalBackdrop.classList.remove('open'));
+        dom.addModalBackdrop.addEventListener('click', e => {
+          if (e.target === dom.addModalBackdrop) dom.addModalBackdrop.classList.remove('open');
+        });
+
+        document.querySelectorAll('[data-addtab]').forEach(tabBtn => {
+          bindClick(tabBtn, () => {
+            const target = tabBtn.dataset.addtab;
+            document.querySelectorAll('[data-addtab]').forEach(b => b.classList.toggle('active', b === tabBtn));
+            document.getElementById('addPaneRepo').classList.toggle('active', target === 'repo');
+            document.getElementById('addPaneRom').classList.toggle('active', target === 'rom');
+            document.getElementById('addPaneUrl').classList.toggle('active', target === 'url');
+          });
+        });
+
+        bindClick(dom.launchRepoFileBtn, () => {
+          let fname = dom.repoFileInput.value.trim();
+          if (!fname) return;
+          if (!/\.html?$/i.test(fname)) fname += '.html';
+          const info = humanizeFilename(fname);
+          const customEntry = {
+            file: fname,
+            repoPath: `UGS-Files/${fname}`,
+            title: dom.repoTitleInput.value.trim() || info.title,
+            type: info.console ? 'emulated' : 'html5',
+            console: info.console || '',
+            genre: classifyGenre(info.title),
+            isExternal: false,
+            externalUrl: ''
+          };
+          addOrUpdateGame(customEntry);
+          state.customGames.push(customEntry);
+          writeJson(STORAGE_KEYS.CUSTOM_GAMES, state.customGames);
+          dom.addModalBackdrop.classList.remove('open');
+          renderAllUI();
+          openGame(customEntry);
+        });
+
+        bindClick(dom.romDropzone, () => dom.romFileInput.click());
+        dom.romFileInput.addEventListener('change', () => {
+          if (dom.romFileInput.files && dom.romFileInput.files[0]) {
+            launchLocalRomFile(dom.romFileInput.files[0]);
+          }
+        });
+
+        bindClick(dom.saveExtUrlBtn, () => {
+          const title = dom.extTitleInput.value.trim();
+          const url = dom.extUrlInput.value.trim();
+          if (!title || !url) return;
+          const entry = {
+            file: `ext_${Date.now()}.html`,
+            repoPath: '',
+            title,
+            type: 'external',
+            console: '',
+            genre: dom.extGenreSelect.value || 'action',
+            isExternal: true,
+            externalUrl: url
+          };
+          addOrUpdateGame(entry);
+          state.customGames.push(entry);
+          writeJson(STORAGE_KEYS.CUSTOM_GAMES, state.customGames);
+          dom.addModalBackdrop.classList.remove('open');
+          renderAllUI();
+          showToast(`Added "${title}" to library!`);
+        });
+
+        // Credits & Trademarks Modal
+        [dom.headerCreditsBtn, dom.footerCreditsBtn].forEach(btn => {
+          bindClick(btn, () => dom.creditsModalBackdrop.classList.add('open'));
+        });
+        bindClick(dom.closeCreditsModalBtn, () => dom.creditsModalBackdrop.classList.remove('open'));
+        dom.creditsModalBackdrop.addEventListener('click', e => {
+          if (e.target === dom.creditsModalBackdrop) dom.creditsModalBackdrop.classList.remove('open');
+        });
+
+        document.querySelectorAll('[data-credtab]').forEach(tabBtn => {
+          bindClick(tabBtn, () => {
+            const target = tabBtn.dataset.credtab;
+            document.querySelectorAll('[data-credtab]').forEach(b => b.classList.toggle('active', b === tabBtn));
+            document.getElementById('credPaneCredits').classList.toggle('active', target === 'credits');
+            document.getElementById('credPaneTrademarks').classList.toggle('active', target === 'trademarks');
+          });
+        });
+
+        // Infinite Scroll Observer
+        if ('IntersectionObserver' in window && dom.scrollSentinel) {
+          const io = new IntersectionObserver(entries => {
+            if (entries.some(en => en.isIntersecting)) {
+              const total = getFilteredGames().length;
+              if (state.visibleLimit < total) {
+                state.visibleLimit += 120;
+                renderGamesGrid();
+              }
+            }
+          }, { rootMargin: '280px' });
+          io.observe(dom.scrollSentinel);
+        }
+      }
+
+      function init() {
+        try {
+          parseStarterCatalog();
+          if (Array.isArray(state.customGames)) {
+            for (const cg of state.customGames) addOrUpdateGame(cg);
+          }
+          dom.modeStageBtn.classList.toggle('active', state.launchMode === 'stage');
+          dom.modeBlankBtn.classList.toggle('active', state.launchMode === 'blank');
+          populateGenreDropdown();
+          bindEvents();
+          renderAllUI();
+          syncLiveRepository(false);
+        } catch (err) {
+          console.error('[Nova Arcade Init Error]', err);
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
